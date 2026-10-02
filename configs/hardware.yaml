@@ -1,0 +1,18 @@
+# Hardware Dispatching Configuration
+hardware:
+  mode: "auto" # auto | cpu | cuda
+  cpu:
+    enabled: true
+    threads: "auto" # or specific integer
+    max_workers: 4
+  gpu:
+    enabled: "auto"
+    preferred_device: 0
+    min_vram_gb_for_sdxl: 8
+    min_vram_gb_for_whisper_large: 8
+    memory_cleanup_after_stage: true
+  storage:
+    retain_source: true
+    retain_intermediate: true
+    cleanup_failed_jobs_after_days: 7
+    archive_completed_after_days: 30

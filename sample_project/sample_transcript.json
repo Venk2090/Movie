@@ -1,0 +1,36 @@
+{
+  "language": "en",
+  "duration": 24.5,
+  "segments": [
+    {
+      "id": 1,
+      "start": 0.0,
+      "end": 4.5,
+      "text": "Welcome to the global technology and economic outlook briefing."
+    },
+    {
+      "id": 2,
+      "start": 4.5,
+      "end": 9.2,
+      "text": "Today we examine open architectures, verifiable sovereignty, and digital ecosystems."
+    },
+    {
+      "id": 3,
+      "start": 9.2,
+      "end": 14.0,
+      "text": "Decentralized processing models empower creators without mandatory subscription locks."
+    },
+    {
+      "id": 4,
+      "start": 14.0,
+      "end": 19.5,
+      "text": "Multilingual content bridges international communities across eleven major linguistic regions."
+    },
+    {
+      "id": 5,
+      "start": 19.5,
+      "end": 24.5,
+      "text": "Let us review the operational roadmap and production benchmarks for this quarter."
+    }
+  ]
+}

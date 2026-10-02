@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - studio-net
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://studio:studiopass@postgres:5432/videostudio
+      - REDIS_URL=redis://redis:6379/0
+      - HARDWARE_MODE=auto
+      - STORAGE_DIR=/app/storage
+      - MOCK_PIPELINE=false
+    volumes:
+      - ./storage:/app/storage
+      - ./models:/app/models
+      - ./configs:/app/configs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - studio-net
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    command: python -m app.workers.pipeline_worker
+    environment:
+      - DATABASE_URL=postgresql://studio:studiopass@postgres:5432/videostudio
+      - REDIS_URL=redis://redis:6379/0
+      - HARDWARE_MODE=auto
+      - STORAGE_DIR=/app/storage
+    volumes:
+      - ./storage:/app/storage
+      - ./models:/app/models
+      - ./configs:/app/configs
+    depends_on:
+      - backend
+      - redis
+    restart: unless-stopped
+    networks:
+      - studio-net
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: studio
+      POSTGRES_PASSWORD: studiopass
+      POSTGRES_DB: videostudio
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studio -d videostudio"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - studio-net
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - studio-net
+
+networks:
+  studio-net:
+    driver: bridge
+
+volumes:
+  pgdata:

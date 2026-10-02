@@ -1,0 +1,6 @@
+{
+  "name": "OpenVideoStudio",
+  "description": "100% FOSS modular platform for AI video localization, storyboarding, multilingual voiceover synthesis, and cinematic 4K video generation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

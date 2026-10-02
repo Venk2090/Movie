@@ -1,0 +1,109 @@
+# Language Configuration for OpenVideoStudio
+languages:
+  en:
+    name: "English"
+    native_name: "English"
+    code_639_1: "en"
+    nllb_code: "eng_Latn"
+    direction: "ltr"
+    default_tts_voice: "af_heart"
+    enabled: true
+
+  es:
+    name: "Spanish"
+    native_name: "Español"
+    code_639_1: "es"
+    nllb_code: "spa_Latn"
+    direction: "ltr"
+    default_tts_voice: "es_alvaro"
+    enabled: true
+
+  pt:
+    name: "Portuguese"
+    native_name: "Português"
+    code_639_1: "pt"
+    nllb_code: "por_Latn"
+    direction: "ltr"
+    default_tts_voice: "pt_camila"
+    enabled: true
+
+  fr:
+    name: "French"
+    native_name: "Français"
+    code_639_1: "fr"
+    nllb_code: "fra_Latn"
+    direction: "ltr"
+    default_tts_voice: "fr_pierre"
+    enabled: true
+
+  te:
+    name: "Telugu"
+    native_name: "తెలుగు"
+    code_639_1: "te"
+    nllb_code: "tel_Telu"
+    direction: "ltr"
+    default_tts_voice: "te_ananya"
+    enabled: true
+
+  kn:
+    name: "Kannada"
+    native_name: "ಕನ್ನಡ"
+    code_639_1: "kn"
+    nllb_code: "kan_Knda"
+    direction: "ltr"
+    default_tts_voice: "kn_raghav"
+    enabled: true
+
+  ml:
+    name: "Malayalam"
+    native_name: "മലയാളം"
+    code_639_1: "ml"
+    nllb_code: "mal_Mlym"
+    direction: "ltr"
+    default_tts_voice: "ml_anoop"
+    enabled: true
+
+  hi:
+    name: "Hindi"
+    native_name: "हिन्दी"
+    code_639_1: "hi"
+    nllb_code: "hin_Deva"
+    direction: "ltr"
+    default_tts_voice: "hi_aarav"
+    enabled: true
+
+  bn:
+    name: "Bengali"
+    native_name: "বাংলা"
+    code_639_1: "bn"
+    nllb_code: "ben_Beng"
+    direction: "ltr"
+    default_tts_voice: "bn_sourav"
+    enabled: true
+
+  gu:
+    name: "Gujarati"
+    native_name: "ગુજરાતી"
+    code_639_1: "gu"
+    nllb_code: "guj_Gujr"
+    direction: "ltr"
+    default_tts_voice: "gu_kartik"
+    enabled: true
+
+  zh:
+    name: "Chinese (Simplified)"
+    native_name: "简体中文"
+    code_639_1: "zh"
+    nllb_code: "zho_Hans"
+    direction: "ltr"
+    default_tts_voice: "zh_xiaoyan"
+    enabled: true
+
+  ru:
+    name: "Russian"
+    native_name: "Русский"
+    code_639_1: "ru"
+    nllb_code: "rus_Cyrl"
+    direction: "ltr"
+    default_tts_voice: "ru_dmitri"
+    enabled: true

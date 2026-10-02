@@ -1,0 +1,28 @@
+[
+  {
+    "scene_number": 1,
+    "start_time": 0.0,
+    "end_time": 4.5,
+    "duration": 4.5,
+    "dialogue": "Welcome to the global technology and economic outlook briefing.",
+    "summary": "Introduction and panoramic overview",
+    "visual_description": "Cinematic wide establishing shot of modern coastal skyline at sunrise, glass architecture reflecting golden light, atmospheric marine fog, 35mm anamorphic lens.",
+    "camera": "Wide establishing pan right",
+    "lighting": "Natural golden hour volumetric illumination",
+    "environment": "Modern coastal metropolis",
+    "style": "cinematic documentary"
+  },
+  {
+    "scene_number": 2,
+    "start_time": 4.5,
+    "end_time": 9.2,
+    "duration": 4.7,
+    "dialogue": "Today we examine open architectures, verifiable sovereignty, and digital ecosystems.",
+    "summary": "Technical architecture focus",
+    "visual_description": "Clean engineering workstation featuring schematic diagrams, brushed aluminum computing chassis, optical fiber interconnects, sharp macro focus.",
+    "camera": "Slow macro push-in",
+    "lighting": "Cool studio rim lighting with warm tungsten highlights",
+    "environment": "High-tech research laboratory",
+    "style": "cinematic technical"
+  }
+]

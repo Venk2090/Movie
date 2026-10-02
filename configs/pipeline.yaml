@@ -1,0 +1,59 @@
+# Pipeline Processing Rules
+pipeline:
+  max_concurrent_projects: 3
+  mock_ai: false
+
+ingestion:
+  audio_format: "wav"
+  sample_rate: 16000
+  channels: 1
+  pcm_bitdepth: 16
+  loudness_norm_ebu_r128: true
+
+transcription:
+  word_timestamps: true
+  vad_filter: true
+  min_silence_duration_ms: 500
+
+transcript_cleaning:
+  merge_fragment_threshold_seconds: 1.2
+  split_long_sentence_chars: 90
+  normalize_punctuation: true
+
+translation_qa:
+  max_duration_deviation_ratio: 0.25
+  flag_untranslated_ratio: 0.15
+  check_proper_nouns: true
+
+storyboard:
+  min_scene_duration_seconds: 3.5
+  max_scene_duration_seconds: 12.0
+  default_style: "cinematic"
+  ken_burns_zoom_range: [1.0, 1.15]
+
+subtitles:
+  max_lines: 2
+  max_chars_per_line: 42
+  min_duration_seconds: 1.0
+  max_duration_seconds: 7.0
+  reading_speed_max_wpm: 220
+
+render:
+  default_resolution: "3840x2160" # 4K
+  resolutions:
+    "1080p":
+      width: 1920
+      height: 1080
+      bitrate: "6000k"
+    "1440p":
+      width: 2560
+      height: 1440
+      bitrate: "12000k"
+    "4k":
+      width: 3840
+      height: 2160
+      bitrate: "24000k"
+  fps: 30
+  crf: 18
+  audio_codec: "aac"
+  audio_bitrate: "192k"

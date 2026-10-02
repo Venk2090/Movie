@@ -1,0 +1,76 @@
+# Model Registry Configuration
+stt:
+  provider: "faster-whisper"
+  default_model: "large-v3"
+  fallback_model: "base"
+  device: "auto" # auto | cuda | cpu
+  compute_type: "auto" # auto | float16 | int8
+  models:
+    tiny:
+      size_mb: 75
+      vram_req_gb: 1
+      license: "MIT"
+      commercial: true
+    base:
+      size_mb: 145
+      vram_req_gb: 2
+      license: "MIT"
+      commercial: true
+    small:
+      size_mb: 480
+      vram_req_gb: 4
+      license: "MIT"
+      commercial: true
+    medium:
+      size_mb: 1500
+      vram_req_gb: 6
+      license: "MIT"
+      commercial: true
+    large-v3:
+      size_mb: 3100
+      vram_req_gb: 8
+      license: "MIT"
+      commercial: true
+
+translation:
+  provider: "nllb" # nllb | ollama | opus-mt
+  nllb:
+    model: "facebook/nllb-200-distilled-600M"
+    license: "CC-BY-NC-4.0"
+    commercial: false
+  opus_mt:
+    license: "Apache-2.0"
+    commercial: true
+  ollama:
+    model: "qwen2.5:7b"
+    endpoint: "http://localhost:11434"
+    license: "Apache-2.0"
+    commercial: true
+
+storyboard:
+  provider: "comfyui" # comfyui | procedural
+  comfyui_endpoint: "http://localhost:8188"
+  default_workflow: "storyboard_cinematic.json"
+  checkpoint: "sd_xl_base_1.0.safetensors"
+  license: "CreativeML OpenRAIL++-M"
+  commercial: true
+
+tts:
+  provider: "kokoro" # kokoro | xtts
+  kokoro:
+    repo: "hexgrad/Kokoro-82M"
+    license: "Apache-2.0"
+    commercial: true
+  xtts:
+    repo: "coqui/XTTS-v2"
+    license: "CPML"
+    commercial: false
+    consent_required: true
+
+video:
+  engine: "ffmpeg"
+  transitions: ["crossfade", "fade", "slide", "kenburns"]
+  codecs:
+    h264: "libx264"
+    h265: "libx265"
+    av1: "libsvtav1"

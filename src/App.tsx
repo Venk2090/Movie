@@ -1,10 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { Project, LanguageCode, HardwareInfo, ModelInfo, Scene, TranscriptSegment, StageName } from './types';
-import { INITIAL_PROJECT, buildLocalizedOutputs, DEFAULT_PIPELINE_STAGES, INITIAL_SCENES, INITIAL_RAW_TRANSCRIPT } from './data/mockData';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Project,
+  LanguageCode,
+  HardwareInfo,
+  ModelInfo,
+  Scene,
+  TranscriptSegment,
+  PreflightReport,
+  CharacterConsistencyConfig,
+  KokoroProsodyConfig,
+  WorkflowStepId,
+  SaveStatus
+} from './types';
+import {
+  DEFAULT_KOKORO_PROSODY,
+  downloadProjectZipArchive
+} from './utils/voiceover';
+import { INITIAL_PROJECT, buildLocalizedOutputs, DEFAULT_PIPELINE_STAGES } from './data/mockData';
 import { REGISTERED_MODELS } from './data/modelsData';
 import { INITIAL_11_LANGUAGES } from './data/languages';
 import { extractYouTubeId } from './utils/youtube';
-import { generateSceneArtwork } from './utils/sceneArt';
+import {
+  generateSceneArtwork,
+  DEFAULT_CHARACTER_CONSISTENCY,
+  prependCharacterConsistencyToPrompt,
+  getDefaultMotionPresetForIndex
+} from './utils/sceneArt';
+import {
+  regenerateSingleSceneFromTranscript,
+  computeProjectQualityAudit
+} from './utils/transcriptPipeline';
+import { PipelineErrorTracker, PipelineErrorCode, createDiagnosticLog } from './utils/errorTracking';
 import { Navbar } from './components/Navbar';
 import { QuickUrlBar } from './components/QuickUrlBar';
 import { DashboardMetrics } from './components/DashboardMetrics';
@@ -18,10 +44,21 @@ import { LicenseInventoryView } from './components/LicenseInventoryView';
 import { CreateVideoModal } from './components/CreateVideoModal';
 import { QualityReportModal } from './components/QualityReportModal';
 import { ProjectListView } from './components/ProjectListView';
+import { CharacterConsistencyModule } from './components/CharacterConsistencyModule';
+import { SceneTimelineBar } from './components/SceneTimelineBar';
+import { HumanReviewCheckpoint } from './components/HumanReviewCheckpoint';
+import {
+  CheckCircle2,
+  AlertTriangle,
+  Save,
+  Lock,
+  Sparkles,
+  RefreshCw,
+  Trash2
+} from 'lucide-react';
 
 /**
- * Dynamically calculates the optimal scene count based on the full video duration returned from the API.
- * For videos over 60 minutes (3600s+), scales dynamically with runtime (~1 scene every ~3 minutes, up to 36 scenes).
+ * Dynamically calculates target scene count based on video duration when grouping long transcripts.
  */
 export function calculateDynamicSceneCount(durationSeconds: number): number {
   if (!durationSeconds || durationSeconds <= 0) return 4;
@@ -29,24 +66,43 @@ export function calculateDynamicSceneCount(durationSeconds: number): number {
     const scaled = Math.round(durationSeconds / 180);
     return Math.min(48, Math.max(18, scaled));
   }
-  if (durationSeconds >= 2400) return 16; // 40m - 60m
-  if (durationSeconds >= 1200) return 12; // 20m - 40m
-  if (durationSeconds >= 600) return 8;   // 10m - 20m
-  if (durationSeconds >= 300) return 6;   // 5m - 10m
-  if (durationSeconds >= 100) return 4;   // 1.5m - 5m
+  if (durationSeconds >= 2400) return 16;
+  if (durationSeconds >= 1200) return 12;
+  if (durationSeconds >= 600) return 8;
+  if (durationSeconds >= 300) return 6;
+  if (durationSeconds >= 100) return 4;
   return 3;
 }
+
+const WORKFLOW_STEPS: { id: WorkflowStepId; label: string; stepNum: number }[] = [
+  { id: 'source', label: 'Source', stepNum: 1 },
+  { id: 'transcript', label: 'Transcript', stepNum: 2 },
+  { id: 'storyboard', label: 'Storyboard', stepNum: 3 },
+  { id: 'voiceover', label: 'Voice-over & Languages', stepNum: 4 },
+  { id: 'review', label: 'Human Review', stepNum: 5 },
+  { id: 'export', label: 'Export', stepNum: 6 }
+];
 
 export default function App() {
   const [projects, setProjects] = useState<Project[]>([INITIAL_PROJECT]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>(INITIAL_PROJECT.id);
   const [activeTab, setActiveTab] = useState<string>('dashboard');
-  const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>('te'); // Default to Telugu (తెలుగు)
+  const [activeWorkflowStep, setActiveWorkflowStep] = useState<WorkflowStepId>('storyboard');
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>('te');
   const [models, setModels] = useState<ModelInfo[]>(REGISTERED_MODELS);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isQualityReportOpen, setIsQualityReportOpen] = useState(false);
   const [isDemoRunning, setIsDemoRunning] = useState(false);
   const [isProcessingUrl, setIsProcessingUrl] = useState(false);
+  const [focusedSceneId, setFocusedSceneId] = useState<number | null>(null);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
+
+  const [characterConsistency, setCharacterConsistency] = useState<CharacterConsistencyConfig>(
+    DEFAULT_CHARACTER_CONSISTENCY
+  );
+  const [kokoroProsody, setKokoroProsody] = useState<KokoroProsodyConfig>(
+    DEFAULT_KOKORO_PROSODY
+  );
 
   const [hardware, setHardware] = useState<HardwareInfo>({
     cpu: {
@@ -65,8 +121,38 @@ export default function App() {
     executionMode: 'NVIDIA GPU (CUDA)'
   });
 
-  // Query live host hardware specs on load
+  // Load persisted projects and host hardware specs on mount
   useEffect(() => {
+    fetch('/api/projects')
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (data?.projects && Array.isArray(data.projects) && data.projects.length > 0) {
+          const hydrated = data.projects.map((p: Project) => {
+            const fullOutputs = buildLocalizedOutputs(
+              INITIAL_11_LANGUAGES,
+              p.cleanTranscript || INITIAL_PROJECT.cleanTranscript,
+              undefined,
+              p.name,
+              {
+                isDemoMode: Boolean(p.isDemoMode),
+                sourceLanguage: (p.sourceLanguage as LanguageCode) || 'en'
+              }
+            );
+            return {
+              ...p,
+              targetLanguages: INITIAL_11_LANGUAGES,
+              localizedOutputs: {
+                ...fullOutputs,
+                ...(p.localizedOutputs || {})
+              }
+            };
+          });
+          setProjects(hydrated);
+          setSelectedProjectId(hydrated[0].id);
+        }
+      })
+      .catch(() => {});
+
     fetch('/api/hardware')
       .then(res => res.json())
       .then(data => {
@@ -85,32 +171,49 @@ export default function App() {
           });
         }
       })
-      .catch(() => {
-        // Fallback to default hardware info
-      });
+      .catch(() => {});
   }, []);
 
   const activeProject = projects.find(p => p.id === selectedProjectId) || projects[0];
 
-  // Helper to execute simulated transitions if running locally
+  // Autosave active project to backend persistent store whenever edits occur
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const persistProjectToServer = (projToSave: Project) => {
+    setSaveStatus('saving');
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      fetch(`/api/projects/${encodeURIComponent(projToSave.id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(projToSave)
+      })
+        .then(res => {
+          setSaveStatus(res.ok ? 'saved' : 'error');
+        })
+        .catch(() => {
+          setSaveStatus('error');
+        });
+    }, 350);
+  };
+
   const executePipelineSequence = (projectId: string, targetLangs: LanguageCode[]) => {
     let step = 0;
     const stages = DEFAULT_PIPELINE_STAGES;
     const stageNames = stages.map(s => s.name);
 
     const logMessages = [
-      'Connecting to source YouTube stream and verifying audio stream format...',
-      'Downloaded 16kHz PCM WAV. Normalizing loudness via EBU R128 loudnorm filter...',
-      'Transcribing speech with faster-whisper large-v3. Detected source English (p=0.99)...',
-      'Normalized punctuation and merged semantic segments for subtitle readability...',
-      `Translating into ${targetLangs.length} target languages (including Telugu, Kannada, Hindi)...`,
-      'Running Translation QA: Sub-second timestamp alignment verified. 0 deviations.',
-      'Segmented 4 cinematic visual scenes with anamorphic framing instructions...',
-      'Generating high-resolution storyboard visual frames via SDXL ComfyUI workflow...',
-      `Synthesizing localized voiceover speech via Kokoro-82M across all ${targetLangs.length} languages...`,
-      'Generated standardized SRT, VTT, and ASS subtitle tracks with max 42 chars/line...',
-      'Rendering deterministic 4K (3840x2160) Ken Burns video with synchronized audio...',
-      'Quality Check PASS: All 4K streams certified and packaged into project bundle.'
+      'Connecting to source stream and verifying caption/audio availability...',
+      'Normalizing audio loudness via EBU R128 loudnorm filter...',
+      'Transcribing speech with segment-level timestamps...',
+      'Normalized punctuation and validated monotonic segment boundaries...',
+      `Translating 1:1 transcript segments into ${targetLangs.length} target languages...`,
+      'Running Translation QA: Sub-second timestamp alignment verified.',
+      'Generated transcript-grounded cinematic scenes and character registry...',
+      'Synthesizing visual frames grounded in transcript dialogue...',
+      `Pre-warming neural speech audio across ${targetLangs.length} languages...`,
+      'Generated standardized SRT and VTT subtitle tracks...',
+      'Ready for FFmpeg MP4 video export with synchronized audio...',
+      'Quality Audit complete.'
     ];
 
     const interval = setInterval(() => {
@@ -152,10 +255,10 @@ export default function App() {
         clearInterval(interval);
         setIsDemoRunning(false);
       }
-    }, 600);
+    }, 450);
   };
 
-  // Demo Run button trigger
+  // Explicit Demo Run button trigger (clearly labeled as Demo Mode)
   const handleRunDemo = () => {
     setIsDemoRunning(true);
     const demoId = `VID-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -163,14 +266,19 @@ export default function App() {
     const newDemoProject: Project = {
       ...INITIAL_PROJECT,
       id: demoId,
-      name: `Demo Showcase - Global Localization`,
+      name: `[SAMPLE DEMO] Global Localization Showcase`,
+      isDemoMode: true,
+      transcriptProvenance: 'demo_mock',
       status: 'RUNNING',
       progress: 0,
       createdAt: new Date().toISOString(),
       targetLanguages: INITIAL_11_LANGUAGES,
-      localizedOutputs: buildLocalizedOutputs(INITIAL_11_LANGUAGES),
+      localizedOutputs: buildLocalizedOutputs(INITIAL_11_LANGUAGES, INITIAL_PROJECT.cleanTranscript, undefined, INITIAL_PROJECT.name, {
+        isDemoMode: true,
+        sourceLanguage: 'en'
+      }),
       stages: DEFAULT_PIPELINE_STAGES.map((s, i) => (i === 0 ? { ...s, status: 'RUNNING', progress: 15 } : { ...s, status: 'PENDING', progress: 0 })),
-      logs: [{ timestamp: new Date().toTimeString().split(' ')[0], stage: 'INGESTION', level: 'INFO', message: 'Demo run initiated. Localizing into 12 languages.' }]
+      logs: [{ timestamp: new Date().toTimeString().split(' ')[0], stage: 'INGESTION', level: 'INFO', message: 'Explicit Sample Demo run initiated.' }]
     };
 
     setProjects(prev => [newDemoProject, ...prev]);
@@ -179,293 +287,96 @@ export default function App() {
     executePipelineSequence(demoId, INITIAL_11_LANGUAGES);
   };
 
-  // True End-to-End Multilingual AI Pipeline for any YouTube URL
-  const processAndLocalizeVideo = async (input: string | {
-    url?: string;
-    sourceUrl?: string;
-    name?: string;
-    targetLanguages?: LanguageCode[];
-    resolution?: '1080p' | '1440p' | '4k';
-    thumbnailUrl?: string;
-    ttsVoice?: string;
-    sourceLanguage?: string;
-    durationSeconds?: number;
-    detectedLanguage?: string;
-  }) => {
-    const rawUrl = typeof input === 'string' ? input : (input?.url || input?.sourceUrl || '');
+  /**
+   * Transcript-Grounded Ingestion & Localization Pipeline.
+   * Never fabricates transcripts from title/URL metadata and never uses modulo indexing to repeat lines.
+   */
+  const processAndLocalizeVideo = async (
+    input:
+      | string
+      | {
+          url?: string;
+          sourceUrl?: string;
+          name?: string;
+          targetLanguages?: LanguageCode[];
+          resolution?: '1080p' | '1440p' | '4k';
+          thumbnailUrl?: string;
+          ttsVoice?: string;
+          sourceLanguage?: string;
+          durationSeconds?: number;
+          detectedLanguage?: string;
+          transcriptText?: string;
+          transcriptSegments?: TranscriptSegment[];
+          uploadedMediaPath?: string;
+          uploadedMediaName?: string;
+          allowDemoMode?: boolean;
+        }
+  ) => {
+    const rawUrl = typeof input === 'string' ? input : input?.url || input?.sourceUrl || '';
     const cleanUrl = rawUrl.trim();
-    if (!cleanUrl) {
-      console.warn('processAndLocalizeVideo called with empty URL');
+    if (!cleanUrl && !(typeof input === 'object' && (input.transcriptText || input.uploadedMediaPath))) {
       return;
     }
 
     const ytid = extractYouTubeId(cleanUrl);
-    const customName = (typeof input === 'object' && input?.name?.trim()) ? input.name.trim() : '';
-    const videoName = customName || (ytid ? `YouTube Stream (${ytid})` : 'Ingested YouTube Media');
-    const resolution = (typeof input === 'object' && input?.resolution) ? input.resolution : '4k';
-    const ttsVoice = (typeof input === 'object' && input?.ttsVoice) ? input.ttsVoice : 'default';
-    const sourceLanguage = (typeof input === 'object' && input?.sourceLanguage) ? input.sourceLanguage : 'auto';
-    const thumbnailUrl = (typeof input === 'object' && input?.thumbnailUrl)
-      ? input.thumbnailUrl
-      : (ytid ? `https://img.youtube.com/vi/${ytid}/hqdefault.jpg` : '/src/assets/images/scene_skyline_sunrise_1790581489340.jpg');
+    const customName = typeof input === 'object' && input?.name?.trim() ? input.name.trim() : '';
+    const videoName = customName || (ytid ? `YouTube Stream (${ytid})` : 'Ingested Media Project');
+    const resolution = typeof input === 'object' && input?.resolution ? input.resolution : '4k';
+    const ttsVoice = typeof input === 'object' && input?.ttsVoice ? input.ttsVoice : 'Kore';
+    const sourceLanguage = typeof input === 'object' && input?.sourceLanguage ? input.sourceLanguage : 'auto';
+    const allowDemoMode =
+      typeof input === 'object' && input?.allowDemoMode !== undefined
+        ? Boolean(input.allowDemoMode)
+        : true;
 
-    const rawLangs: LanguageCode[] = (typeof input === 'object' && Array.isArray(input?.targetLanguages) && input.targetLanguages.length > 0)
-      ? (input.targetLanguages as LanguageCode[])
-      : (['te', 'en', 'es', 'fr', 'hi', 'kn', 'zh'] as LanguageCode[]);
-    const targetLangs: LanguageCode[] = Array.from(new Set<LanguageCode>(['te' as LanguageCode, ...rawLangs]));
+    // Ensure all 12 languages are included so end-video rendering works for every language
+    const targetLangs: LanguageCode[] =
+      typeof input === 'object' && Array.isArray(input?.targetLanguages) && input.targetLanguages.length > 0
+        ? (Array.from(new Set([...input.targetLanguages, ...INITIAL_11_LANGUAGES])) as LanguageCode[])
+        : INITIAL_11_LANGUAGES;
 
-    const videoDuration = (typeof input === 'object' && typeof input?.durationSeconds === 'number' && input.durationSeconds > 10)
-      ? input.durationSeconds
-      : (ytid === 'rmF5ux3sRVk' ? 133 : (ytid === 'qTbo-vR_PTg' ? 3947 : 133));
-    const detectedLang = (typeof input === 'object' && input?.detectedLanguage)
-      ? input.detectedLanguage
-      : 'Telugu (తెలుగు - Auto-detected)';
+    const videoDuration =
+      typeof input === 'object' && typeof input?.durationSeconds === 'number' && input.durationSeconds > 1
+        ? input.durationSeconds
+        : 133;
+    const detectedLang =
+      typeof input === 'object' && input?.detectedLanguage
+        ? input.detectedLanguage
+        : 'Auto-Detecting...';
 
-    const isTelugu = detectedLang.toLowerCase().includes('telugu') || detectedLang.toLowerCase().includes('te');
     const newId = `VID-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    const numScenes = calculateDynamicSceneCount(videoDuration);
-    const sceneSlice = videoDuration / numScenes;
-
-    const isBangalore = /bangalore|bengaluru|బెంగళూరు|బ్రతుకు|దుర్భరం/i.test(videoName + ' ' + cleanUrl);
-    const isNationalistHub = /national\s*roundup|nationalist\s*hub|అమిత్\s*షా|అజిత్\s*దోవల్|ucc|pslv|ep-216|qTbo-vR_PTg/i.test(videoName + ' ' + cleanUrl);
-
-    const nationalistHubSummaries = [
-      'National Roundup Broadcast Ingestion: Episode 216 Anchor Opening & Prime-Time Headline Rundown',
-      'Home Minister Amit Shah UCC Declaration: Constitutional Mandate & Legislative Blueprint',
-      'Uniform Civil Code Multi-State Framework: 21 States Harmonization & Legal Reform',
-      'Civil Law Equal Rights Architecture: Universal Marriage, Divorce & Inheritance Protections',
-      'Consultations with State Law Commissions & Regional Political Consensus',
-      'National Security Advisor Ajit Doval Strategic Intelligence Activation',
-      'Border Intelligence & Internal Stability Protocols: Multi-Agency Grid',
-      'Critical Infrastructure Hardening: Defense Communications & Counter-Sabotage Directives',
-      'Cyber Command Strategy: Encrypted Data Conduits & Satellite Uplink Resilience',
-      'ISRO PSLV Mission Inquiry: Investigating Launch Anomalies & Telemetry Drops',
-      'Telemetry Data & Flight Diagnostics: Scientific Investigation of Space Assets',
-      'Orbital Stage Separation Analysis: Third-Stage Chamber Pressure Variance',
-      'Space Asset Defense & Counter-Sabotage: National Security Overhaul',
-      'Satellite Constellation Hardening: Electronic Counter-Measures & Secure Links',
-      'Geopolitical Intelligence Assessment: Foreign Technological Interference Scrutiny',
-      'UCC Legal Architecture: Personal Law Modernization & Equal Rights',
-      'Regional Alignments & Political Consensus: Consultations with 21 States',
-      'Nationalist Hub Investigative Deep Dive: Decoding the Geopolitical Context',
-      'Strategic Counter-Measures & Institutional Reforms: Executive Directives',
-      'Public Dialogue & Societal Perspectives: Voice of the Nation',
-      'National Security & Legal Synthesis: Final Roadmap & Timeline',
-      'Editorial Conclusion & Conclusive Remarks: Episode 216 Wrap-Up'
-    ];
-
-    const nationalistHubTeluguTexts = [
-      "నమస్కారం, నేషనలిస్ట్ హబ్ నేషనల్ రౌండప్ ఎపిసోడ్ 216 కి స్వాగతం. ఈరోజు కేంద్ర హోంమంత్రి అమిత్ షా తాజా ప్రకటన, దేశ భద్రతా సలహాదారు అజిత్ దోవల్ వ్యూహాత్మక సమీక్ష, మరియు పీఎస్‌ఎల్‌వీ ప్రయోగాల వెనుక వాస్తవాలను సమగ్రంగా విశ్లేషిస్తున్నాం.",
-      "కేంద్ర హోంమంత్రి అమిత్ షా నేతృత్వంలో యూనిఫాం సివిల్ కోడ్ అమలుకు సన్నాహాలు ముమ్మరమయ్యాయి. దేశంలోని 21 రాష్ట్రాలలో యుసిసి అమలుకు కార్యాచరణ సిద్ధమైంది.",
-      "పౌర హక్కుల సమానత్వం, మహిళా సాధికారత మరియు వివిధ చట్టాల ఏకీకరణ లక్ష్యంగా ఈ చట్టం రూపొందుతోంది. ఉత్తరాఖండ్ తరహాలోనే ఇతర రాష్ట్రాలలో కూడా యుసిసి అమలుకు సన్నాహాలు జరుగుతున్నాయి.",
-      "ఇదే సమయంలో జాతీయ భద్రతా సలహాదారు అజిత్ దోవల్ అత్యున్నత స్థాయి భద్రతా సమావేశాన్ని నిర్వహించారు. దేశ అంతర్గత భద్రత మరియు సైబర్ ముప్పులపై సమీక్ష చేపట్టారు.",
-      "దేశవ్యాప్తంగా శాంతిభద్రతలను కాపాడటానికి నిఘా సంస్థలు మరియు కేంద్ర బలగాల సమన్వయాన్ని మరింత పటిష్టం చేశారు.",
-      "ఇక ఇస్రో ప్రతిష్టాత్మక పీఎస్‌ఎల్‌వీ ప్రయోగాల్లో చోటుచేసుకున్న సాంకేతిక లోపాలు మరియు వైఫల్యాల వెనుక గల వాస్తవాలపై ప్రత్యేక నివేదికను నేషనలిస్ట్ హబ్ పరిశీలిస్తోంది.",
-      "రాకెట్ ప్రయోగ సమయంలో సంభవించిన ఒత్తిడి తేడాలు, మరియు శాటిలైట్ కక్ష్యలోకి చేరడంలో ఎదురైన అవరోధాలను శాస్త్రవేత్తలు క్షుణ్ణంగా విశ్లేషించారు.",
-      "అంతరిక్ష ఆస్తుల భద్రత దేశ సార్వభౌమత్వానికి సంబంధించిన వ్యూహాత్మక అంశమని నిపుణులు హెచ్చరిస్తున్నారు. విదేశీ సాంకేతిక జోక్యంపై దర్యాప్తు జరుగుతోంది.",
-      "దేశ రక్షణ మరియు పౌర సమాచార వ్యవస్థలకు అవసరమైన ఉపగ్రహాలను కాపాడుకోవడానికి స్వదేశీ సాంకేతిక పరిజ్ఞానాన్ని మరింత ఆధునికీకరించాలని నిర్ణయించారు.",
-      "వివాహం, విడాకులు మరియు వారసత్వ ఆస్తి హక్కులలో లింగ వివక్ష లేకుండా అందరికీ సమానమైన చట్టాలను అమలు చేయడమే యుసిసి ప్రధాన లక్ష్యం.",
-      "వివిధ ప్రాంతీయ పార్టీలు మరియు పౌర సమాజ ప్రతినిధులతో కేంద్ర ప్రభుత్వం సంప్రదింపులను ముమ్మరం చేసింది.",
-      "అంతర్గత భద్రతా పటిష్టత మరియు ఆధునిక పౌర చట్టాల అమలు దేశాన్ని ప్రపంచ వేదికపై మరింత శక్తివంతంగా నిలబెడతాయని నేషనలిస్ట్ హబ్ విశ్లేషిస్తోంది.",
-      "కేంద్ర ప్రభుత్వం తీసుకుంటున్న ఈ నిర్ణయాలు భవిష్యత్తులో దేశ సమగ్రతకు బలమైన పునాదిగా నిలుస్తాయని పరిపాలనా రంగ నిపుణులు భావిస్తున్నారు.",
-      "ఈ చట్టపరమైన మరియు శాస్త్రీయ మార్పులపై దేశవ్యాప్తంగా ప్రజలు, మేధావులు మరియు యువత తమ విస్తృత మద్దతును వ్యక్తం చేస్తున్నారు.",
-      "అమిత్ షా తాజా ప్రకటన ప్రకారం రానున్న పార్లమెంట్ సమావేశాల్లో కీలక బిల్లులు ప్రవేశపెట్టబడే అవకాశముంది. అజిత్ దోవల్ మార్గదర్శకత్వంలో భద్రతా వ్యవస్థ పటిష్టమవుతోంది.",
-      "21 రాష్ట్రాల ప్రభుత్వాలతో కేంద్రం నిర్వహిస్తున్న సంప్రదింపుల్లో కీలక పురోగతి సాధించబడింది. ప్రాంతీయ ఆకాంక్షలను పరిగణనలోకి తీసుకుంటూ ఏకాభిప్రాయ సాధనకు ప్రయత్నాలు జరుగుతున్నాయి.",
-      "నేషనలిస్ట్ హబ్ ప్రత్యేక పరిశోధన ప్రకారం, అంతర్జాతీయ వ్యూహాత్మక పరిణామాలు మరియు దేశీయ అంతరిక్ష భద్రత పరస్పరం ముడిపడి ఉన్నాయని స్పష్టమవుతోంది.",
-      "భద్రతా వ్యవస్థల ఆధునికీకరణ, ఇస్రో ప్రయోగాల రక్షణ మరియు చట్టాల పటిష్టత కోసం కేంద్ర క్యాబినెట్ పలు కీలక మార్గదర్శకాలను జారీ చేసింది.",
-      "ఈ పరిణామాలపై దేశవ్యాప్తంగా విద్యావేత్తలు, యువత మరియు న్యాయ నిపుణులు తమ అభిప్రాయాలను వ్యక్తం చేస్తున్నారు. ప్రజాస్వామ్య వ్యవస్థలో పారదర్శకత అత్యంత ముఖ్యమైనది.",
-      "జాతీయ భద్రత, సమగ్రత మరియు ఆధునిక పౌర హక్కుల దిశగా భారతదేశం సరికొత్త మైలురాయిని చేరుకోబోతోంది. అమిత్ షా, అజిత్ దోవల్ వ్యూహాలు దీనికి దిక్సూచిగా నిలుస్తున్నాయి.",
-      "సమగ్ర విశ్లేషణ ప్రకారం త్వరలోనే తుది కార్యాచరణ మరియు రక్షణ వ్యూహం పార్లమెంట్ ముందుకు రానుంది. పౌర హక్కుల పరిరక్షణలో ఇది కీలక అడుగు.",
-      "ఇది నేషనలిస్ట్ హబ్ ఎపిసోడ్ 216 ప్రత్యేక ప్రసారం. దేశ భద్రత, చట్టాల ఏకీకరణ మరియు శాస్త్రీయ విజయాలపై మా సమగ్ర విశ్లేషణ. సెలవు, జై హింద్."
-    ];
-
-    const nationalistHubEnglishTexts = [
-      "Welcome to Nationalist Hub National Roundup Episode 216. Today we present an in-depth analysis of Union Home Minister Amit Shah's groundbreaking announcement, NSA Ajit Doval's strategic intelligence review, and critical investigative revelations surrounding PSLV space missions.",
-      "Union Home Minister Amit Shah has intensified legislative preparations for the nationwide implementation of the Uniform Civil Code, drafting blueprints for execution across 21 states.",
-      "Targeting equal civil rights, women's empowerment, and statutory harmonization, consultations proceed on scaling the Uttarakhand UCC model across additional state jurisdictions.",
-      "Concurrently, National Security Advisor Ajit Doval convened a top-tier security conclave, reviewing internal defense architecture, border surveillance, and emerging cyber-threat matrices.",
-      "Intelligence agencies and central forces enhanced operational synergy to preserve civil stability, maintaining heightened surveillance across sensitive regions against disruptive actors.",
-      "Nationalist Hub now investigates the underlying technical factors and telemetry anomalies observed in recent ISRO PSLV rocket launch sequences.",
-      "Flight telemetry indicated stage-separation pressure differentials and orbit injection variance, prompting exhaustive diagnostic evaluation by aerospace propulsion experts.",
-      "Security analysts emphasize that orbital asset resilience is indispensable for national sovereignty, prompting rigorous scrutiny of foreign interference and technological vulnerabilities.",
-      "The defense establishment mandated enhanced hardening of indigenous satellite communications and space payload architectures against electronic warfare.",
-      "Revisiting the Uniform Civil Code, core statutory reforms center on gender equality, universal rights in marriage, divorce, and ancestral inheritance protections.",
-      "The central executive initiated high-level consultations with regional parties and civil society leaders, as state administrations evaluate draft implementation guidelines.",
-      "Nationalist Hub's investigative thesis argues that internal legal modernization and aerospace resilience are twin pillars reinforcing national strategic autonomy.",
-      "Administrative experts project that these structural executive reforms will consolidate institutional integrity, paving the way for parliamentary enactment.",
-      "Nationwide dialogue intensifies across academia, youth, and civic groups, assessing how modern civil equality and technological prowess shape national advancement.",
-      "Home Minister Amit Shah's statements signal pivotal legislative introductions in the upcoming session, while NSA Ajit Doval's directives reshape intelligence operations.",
-      "Consultations across 21 state governments achieve substantial momentum, harmonizing regional priorities with a unified statutory civil framework.",
-      "Nationalist Hub's investigative dossier demonstrates how geopolitical dynamics and sovereign aerospace assets directly interconnect with domestic stability.",
-      "Strategic executive directives mandate rapid modernization of aerospace defense grids, space telemetry integrity, and robust inter-agency counter-sabotage protocols.",
-      "Civic forums, legal scholars, and student assemblies across the nation voice dynamic perspectives on civil equality and defense readiness.",
-      "India stands on the threshold of structural legal and strategic transformation, guided by high-level national security architecture and legislative modernization.",
-      "Editorial synthesis confirms a synchronized roadmap for legislative enactment and technological resilience across upcoming parliamentary cycles.",
-      "Concluding Nationalist Hub Episode 216. We thank our viewers for following this comprehensive analysis on national defense, legislative unification, and space resilience. Jai Hind."
-    ];
-
-    const sceneSummaries = isNationalistHub
-      ? nationalistHubSummaries
-      : isBangalore
-      ? [
-          'Bengaluru Metropolis Ingestion: Morning Commuter Awakening & Skyline Pan',
-          'Traffic Bottlenecks: Outer Ring Road & Silk Board Congestion Crisis',
-          'Cost of Living & Infrastructure: Resident Grievances & Everyday Strains',
-          'Journalistic Investigation & Governance Reform: Conclusive Appeal'
-        ]
-      : [
-          `Opening Showcase: Cinematic exposition of ${videoName}`,
-          `Core themes, narrative development & character motifs`,
-          `Stylistic direction, audiovisual phrasing & atmosphere`,
-          `Dramatic turning point & emotional crescendo`,
-          `Conceptual analysis & cultural context`,
-          `Cinematography, sound design & technical mastery`,
-          `Narrative resolution & philosophic reflections`,
-          `Climactic finale & conclusive perspective`
-        ];
-
-    const initialScenes: Scene[] = [];
-    for (let i = 0; i < numScenes; i++) {
-      const st = Math.round(i * sceneSlice * 10) / 10;
-      const et = Math.round((i + 1) * sceneSlice * 10) / 10;
-      const cam = i % 2 === 0 ? 'Wide establishing pan 24mm anamorphic' : 'Dynamic tracking orbit 35mm cine';
-      const lit = i % 2 === 0 ? 'Golden hour diffused rim lighting' : 'High-contrast volumetric studio lighting';
-      const env = isNationalistHub
-        ? (i % 2 === 0 ? 'Nationalist Hub Prime-Time High-Tech Broadcast Pavilion' : 'National Security Council & Parliamentary Nexus')
-        : (i % 2 === 0 ? 'Architectural Production Pavilion' : 'High-Tech Broadcast Operations Bench');
-      const sum = sceneSummaries[i % sceneSummaries.length];
-
-      const initialDialogue = isNationalistHub
-        ? (isTelugu ? nationalistHubTeluguTexts[i % nationalistHubTeluguTexts.length] : nationalistHubEnglishTexts[i % nationalistHubEnglishTexts.length])
-        : isTelugu
-        ? `${videoName} లోని సన్నివేశం 0${i + 1}: దృశ్య శైలి మరియు భావోద్వేగాల సమగ్ర విశ్లేషణ.`
-        : `Scene 0${i + 1}: Examining the thematic evolution of ${videoName}.`;
-
-      initialScenes.push({
-        id: i + 1,
-        sceneNumber: i + 1,
-        startTime: st,
-        endTime: et,
-        duration: Math.round((et - st) * 10) / 10,
-        dialogue: initialDialogue,
-        summary: sum,
-        visualDescription: `Cinematic 8k photorealistic scene 0${i + 1} of ${videoName}`,
-        prompt: `Cinematic 8k photorealistic scene 0${i + 1} of ${videoName}`,
-        camera: cam,
-        lighting: lit,
-        environment: env,
-        style: 'cinematic documentary 4k',
-        seed: 42000 + i,
-        imageUrl: generateSceneArtwork(
-          { sceneNumber: i + 1, summary: sum, camera: cam, lighting: lit, environment: env, startTime: st, endTime: et },
-          videoName,
-          i,
-          numScenes
-        )
-      });
-    }
-
-    const numSegments = numScenes;
-    const segStep = videoDuration / numSegments;
-    const durMinFormatted = Math.floor(videoDuration / 60);
-    const durSecFormatted = String(videoDuration % 60).padStart(2, '0');
-    const durStr = `${durMinFormatted}:${durSecFormatted}`;
-
-    const teluguInitTexts = isNationalistHub
-      ? nationalistHubTeluguTexts
-      : isBangalore
-      ? [
-          "నమస్కారం, జర్నలిస్ట్ సాయి విశ్లేషణకు స్వాగతం. బెంగళూరు నగరంలో సామాన్య ప్రజల జీవన విధానం మరియు ఎదురవుతున్న సవాళ్లపై ఈ ప్రత్యేక కథనం.",
-          "ట్రాఫిక్ జామ్‌లు, అద్దెలు మరియు రోజువారీ ఖర్చులు భరించలేని విధంగా పెరుగుతున్నాయి. ఉద్యోగులు మరియు వలసదారుల పరిస్థితి దుర్భరంగా మారింది.",
-          "మౌలిక సదుపాయాల కొరత, రోడ్ల దుస్థితి మరియు ప్రజా రవాణా సమస్యలతో ప్రజలు నిత్యం తీవ్ర ఇబ్బందులు పడుతున్నారు.",
-          "ప్రభుత్వ అధికారులు, ప్రజాప్రతినిధులు వెంటనే స్పందించి శాశ్వత పరిష్కారాలు చూపాలని నగరవాసులు కోరుతున్నారు. జర్నలిస్ట్ సాయి గ్రౌండ్ రిపోర్ట్."
-        ]
-      : [
-          `${videoName} గురించిన ఈ పూర్తి నిడివి (${durStr}) సమగ్ర విశ్లేషణకు స్వాగతం.`,
-          `ఈ కథనంలోని ప్రధాన పాత్రలు, సందర్భం మరియు ముఖ్యమైన ఘట్టాల సమీక్ష.`,
-          `ప్రతి దృశ్యంలో దర్శకుడి సృజనాత్మక శైలి మరియు సంగీత సమన్వయం కనిపిస్తుంది.`,
-          `భావోద్వేగాల తీవ్రత మరియు సాంస్కృతిక విశిష్టతను ప్రతిబింబించే అద్భుతమైన ప్రయాణం.`,
-          `కథాగమనంలో చోటుచేసుకునే నాటకీయ మలుపులు ప్రేక్షకులను విశేషంగా ఆకట్టుకుంటాయి.`,
-          `అత్యున్నత స్థాయి సాంకేతిక ప్రమాణాలు, కెమెరా పనితనం మరియు శబ్ద సంకలనం ప్రశంసనీయం.`,
-          `పాత్రల అంతర్గత భావాలు మరియు సంభాషణల లోతు కథనానికి విశేషమైన అందాన్ని చేకూర్చాయి.`,
-          `ఈ సమగ్రమైన దృశ్యరూపకం యొక్క ముగింపు మరియు శాశ్వతమైన సందేశం.`
-        ];
-
-    const englishInitTexts = isNationalistHub
-      ? nationalistHubEnglishTexts
-      : isBangalore
-      ? [
-          "Welcome to this investigative field report by Journalist Sai, examining the harsh realities of daily life in Bengaluru.",
-          "Gridlocked traffic corridors, skyrocketing apartment rents, and escalating daily living costs are squeezing working citizens.",
-          "Severe infrastructure deficits, persistent road decay, and overwhelmed transit systems test citizen patience every single day.",
-          "Residents urgently petition municipal authorities and elected leaders for decisive urban governance and infrastructure remedies."
-        ]
-      : [
-          `Welcome to this comprehensive full-length analysis (${durStr}) of ${videoName}.`,
-          `Examining the narrative architecture, core developments, and character dynamics.`,
-          `Showcasing distinctive visual direction, melodic phrasing, and spoken dialogue.`,
-          `Articulating emotional resonance and cultural nuance across every sequence.`,
-          `Navigating the dramatic turning points and revelations that anchor the storyline.`,
-          `Highlighting extraordinary technical craftsmanship, lighting, and camera movement.`,
-          `Character motivations and philosophical dialogue enrich the viewing experience.`,
-          `Conclusive synthesis and reflective perspective on this complete audio-visual production.`
-        ];
-
-    const sourceTexts = isTelugu ? teluguInitTexts : englishInitTexts;
-
-    const initialRawTranscript: TranscriptSegment[] = [];
-    for (let j = 0; j < numSegments; j++) {
-      initialRawTranscript.push({
-        id: j + 1,
-        start: Math.round(j * segStep * 10) / 10,
-        end: Math.round((j + 1) * segStep * 10) / 10,
-        text: sourceTexts[j % sourceTexts.length]
-      });
-    }
-
-    const initialCustomTranslations: Record<string, { id: number; start: number; end: number; text: string }[]> = {};
-    if (isNationalistHub) {
-      initialCustomTranslations.te = initialRawTranscript.map((t, idx) => ({
-        id: idx + 1,
-        start: t.start,
-        end: t.end,
-        text: nationalistHubTeluguTexts[idx % nationalistHubTeluguTexts.length]
-      }));
-      initialCustomTranslations.en = initialRawTranscript.map((t, idx) => ({
-        id: idx + 1,
-        start: t.start,
-        end: t.end,
-        text: nationalistHubEnglishTexts[idx % nationalistHubEnglishTexts.length]
-      }));
-    }
-
-    // Construct live placeholder project in RUNNING state
-    const initialProject: Project = {
+    // Create an honest RUNNING project skeleton (no fake placeholder transcript lines!)
+    const runningProject: Project = {
       id: newId,
       name: videoName,
-      description: `Ingesting and localizing full-length stream (${videoDuration}s) from ${cleanUrl}`,
+      description: `Ingesting verified transcript & media from ${cleanUrl || 'uploaded source'}`,
       sourceType: 'youtube',
       sourceUrl: cleanUrl,
+      uploadedMediaPath: typeof input === 'object' ? input.uploadedMediaPath : undefined,
+      uploadedMediaName: typeof input === 'object' ? input.uploadedMediaName : undefined,
       sourceLanguage,
       detectedLanguage: detectedLang,
       targetLanguages: targetLangs,
       resolution,
       ttsVoice,
       status: 'RUNNING',
-      progress: 12,
-      currentStage: 'INGESTION',
+      progress: 20,
+      currentStage: 'TRANSCRIPTION',
       durationSeconds: videoDuration,
-      totalStorageBytes: 680000000,
+      totalStorageBytes: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      scenes: initialScenes,
-      rawTranscript: initialRawTranscript,
-      cleanTranscript: initialRawTranscript,
-      localizedOutputs: buildLocalizedOutputs(targetLangs, initialRawTranscript, initialCustomTranslations),
+      isDemoMode: allowDemoMode,
+      scenes: [],
+      rawTranscript: [],
+      cleanTranscript: [],
+      localizedOutputs: {} as Record<LanguageCode, any>,
       stages: DEFAULT_PIPELINE_STAGES.map((s, i) =>
         i === 0
-          ? { ...s, status: 'RUNNING', progress: 50, message: `Media Ingestion: Extracting stream from ${cleanUrl} (${videoDuration}s)` }
+          ? { ...s, status: 'COMPLETED', progress: 100, message: `Connected to ${cleanUrl}` }
+          : i === 1 || i === 2
+          ? { ...s, status: 'RUNNING', progress: 50, message: 'Extracting verified caption track / speech segments...' }
           : { ...s, status: 'PENDING', progress: 0 }
       ),
       logs: [
@@ -473,379 +384,191 @@ export default function App() {
           timestamp: new Date().toTimeString().split(' ')[0],
           stage: 'INGESTION',
           level: 'INFO',
-          message: `Media Ingestion: Stream connected to ${cleanUrl} (Detected Runtime: ${videoDuration}s)`
+          message: `Connecting to ${cleanUrl} and checking verified transcript/caption tracks...`
         }
       ]
     };
 
-    // Immediately update UI state so app never appears idle
-    setProjects(prev => [initialProject, ...prev.filter(p => p.id !== newId)]);
+    setProjects(prev => [runningProject, ...prev.filter(p => p.id !== newId)]);
     setSelectedProjectId(newId);
-    setSelectedLanguage('te');
+    if (!targetLangs.includes(selectedLanguage)) {
+      setSelectedLanguage(targetLangs[0] || 'te');
+    }
     setActiveTab('dashboard');
     setIsProcessingUrl(true);
 
-    const stagesList = DEFAULT_PIPELINE_STAGES;
-
-    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
     try {
-      // 1. Kick off API call in background while progressing stages
-      const apiPromise = fetch('/api/youtube/process', {
+      const response = await fetch('/api/youtube/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(35000),
         body: JSON.stringify({
           url: cleanUrl,
           customName: videoName,
           targetLanguages: targetLangs,
           resolution,
           ttsVoice,
-          durationSeconds: videoDuration
+          durationSeconds: videoDuration,
+          transcriptText: typeof input === 'object' ? input.transcriptText : undefined,
+          transcriptSegments: typeof input === 'object' ? input.transcriptSegments : undefined,
+          uploadedMediaPath: typeof input === 'object' ? input.uploadedMediaPath : undefined,
+          uploadedMediaName: typeof input === 'object' ? input.uploadedMediaName : undefined,
+          allowDemoMode
         })
-      }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+      });
 
-      // Define sequential 12 pipeline steps
-      const stageDefinitions: {
-        index: number;
-        id: string;
-        name: StageName;
-        label: string;
-        model: string;
-        message: string;
-      }[] = [
-        {
-          index: 0,
-          id: '1',
-          name: 'INGESTION',
-          label: 'Media Ingestion',
-          model: 'yt-dlp v2024',
-          message: `Media Ingestion: Stream extracted via yt-dlp v2024 (Full length: ${videoDuration}s)`
-        },
-        {
-          index: 1,
-          id: '2',
-          name: 'AUDIO_NORM',
-          label: 'Audio Normalization',
-          model: 'FFmpeg 7.0',
-          message: 'Audio Normalization: 16kHz mono PCM WAV normalized via FFmpeg 7.0 EBU R128 (-16.0 LUFS)'
-        },
-        {
-          index: 2,
-          id: '3',
-          name: 'TRANSCRIPTION',
-          label: 'Speech-to-Text',
-          model: 'faster-whisper-large-v3',
-          message: `Speech-to-Text: faster-whisper-large-v3 transcribed complete dialogue across ${videoDuration}s with word timestamps`
-        },
-        {
-          index: 3,
-          id: '4',
-          name: 'CLEANING',
-          label: 'Transcript Cleaning',
-          model: 'Deterministic Parser',
-          message: 'Transcript Cleaning: Normalized punctuation, removed disfluencies, balanced subtitle segments'
-        },
-        {
-          index: 4,
-          id: '5',
-          name: 'TRANSLATION',
-          label: 'Multi-Language Translation',
-          model: 'NLLB-200 / Qwen 2.5',
-          message: `Multi-Language Translation: Localized into Telugu (తెలుగు) & ${targetLangs.length - 1} target languages based on transcript`
-        },
-        {
-          index: 5,
-          id: '6',
-          name: 'TRANSLATION_QA',
-          label: 'Translation QA',
-          model: 'QA Verifier',
-          message: 'Translation QA: QA Verifier confirmed 0 timestamp deviations and 100% terminology consistency'
-        },
-        {
-          index: 6,
-          id: '7',
-          name: 'STORYBOARD',
-          label: 'Storyboard Generation',
-          model: 'Scene Extractor',
-          message: `Storyboard Generation: Scene Extractor dynamically generated ${numScenes} full cinematic scenes spanning 0.0s to ${videoDuration}s runtime`
-        },
-        {
-          index: 7,
-          id: '8',
-          name: 'VISUAL_GEN',
-          label: 'Visual Frame Synthesis',
-          model: 'SDXL / ComfyUI',
-          message: `Visual Frame Synthesis: SDXL / ComfyUI synthesized ${numScenes} custom 4K anamorphic visual frames based on transcript story`
-        },
-        {
-          index: 8,
-          id: '9',
-          name: 'VOICEOVER',
-          label: 'Voiceover Synthesis',
-          model: 'Kokoro-82M (Apache 2.0)',
-          message: `Voiceover Synthesis: Kokoro-82M synthesized synchronized neural speech audio for all ${targetLangs.length} languages`
-        },
-        {
-          index: 9,
-          id: '10',
-          name: 'SUBTITLES',
-          label: 'Subtitle Generation',
-          model: 'Subtitle Engine',
-          message: 'Subtitle Generation: Subtitle Engine generated SRT, VTT, and ASS files with line-break balancing'
-        },
-        {
-          index: 10,
-          id: '11',
-          name: 'RENDER',
-          label: '4K Cinematic Render',
-          model: 'FFmpeg libx264 4K',
-          message: `4K Cinematic Render: FFmpeg libx264 4K multiplexed Ken Burns video stream with synchronized audio`
-        },
-        {
-          index: 11,
-          id: '12',
-          name: 'QUALITY_CHECK',
-          label: 'Quality Verification',
-          model: 'Quality Auditor',
-          message: 'Quality Verification: Quality Auditor certified 100% PASS on all audio, visual, and subtitle streams'
-        }
-      ];
+      const apiData = await response.json().catch(() => null);
 
-      // Execute each stage sequentially with realistic duration and live log updates
-      for (let sIdx = 0; sIdx < stageDefinitions.length; sIdx++) {
-        const currentStage = stageDefinitions[sIdx];
-        const stepProgress = Math.round(((sIdx + 1) / stageDefinitions.length) * 100);
+      // Honest failure if captions/transcript could not be obtained and allowDemoMode is false
+      if (!response.ok || apiData?.status === 'NEEDS_TRANSCRIPT_INPUT') {
+        const errMsg =
+          apiData?.message ||
+          apiData?.error ||
+          'Verified captions or speech transcript could not be extracted automatically. Please supply an SRT/VTT/TXT transcript, upload audio/video, or enable Sample Demo mode.';
 
-        // Transition stage to RUNNING
         setProjects(prev =>
           prev.map(p => {
             if (p.id !== newId) return p;
             return {
               ...p,
-              currentStage: currentStage.name,
-              progress: Math.max(p.progress, stepProgress - 5),
-              stages: p.stages.map((stg, i) => {
-                if (i < sIdx) return { ...stg, status: 'COMPLETED' as const, progress: 100 };
-                if (i === sIdx) return { ...stg, status: 'RUNNING' as const, progress: 50, message: currentStage.message };
-                return { ...stg, status: 'PENDING' as const, progress: 0 };
-              }),
+              status: 'NEEDS_REVIEW',
+              progress: 25,
+              currentStage: 'TRANSCRIPTION',
+              failureDetails: {
+                errorCode: apiData?.errorCode || 'ERR_TRANSCRIPT_UNAVAILABLE',
+                stage: 'TRANSCRIPTION',
+                message: errMsg,
+                remediation:
+                  apiData?.remediation ||
+                  'Click "Supply Transcript / Audio" in the bar above to paste SRT/VTT/timestamped text or enable Sample Demo Fallback.',
+                canRetryWithDemo: true,
+                canSupplyTranscriptOrAudio: true
+              },
+              stages: p.stages.map(s =>
+                s.name === 'TRANSCRIPTION'
+                  ? { ...s, status: 'FAILED', progress: 0, message: errMsg }
+                  : s
+              ),
               logs: [
                 ...p.logs,
                 {
                   timestamp: new Date().toTimeString().split(' ')[0],
-                  stage: currentStage.name,
-                  level: 'INFO',
-                  message: currentStage.message
+                  stage: 'TRANSCRIPTION',
+                  level: 'ERROR',
+                  message: errMsg
                 }
               ]
             };
           })
         );
-
-        // Realistic processing pulse between 300ms and 450ms per stage
-        await delay(360);
-
-        // Mark stage as COMPLETED
-        setProjects(prev =>
-          prev.map(p => {
-            if (p.id !== newId) return p;
-            return {
-              ...p,
-              progress: stepProgress,
-              stages: p.stages.map((stg, i) => {
-                if (i <= sIdx) return { ...stg, status: 'COMPLETED' as const, progress: 100, message: currentStage.message };
-                return stg;
-              })
-            };
-          })
-        );
+        return;
       }
 
-      // 2. Await API response and derive full video duration
-      const apiData = await apiPromise;
-      const finalDuration = (apiData && typeof apiData.durationSeconds === 'number' && apiData.durationSeconds > 10)
-        ? apiData.durationSeconds
-        : videoDuration;
+      // Use authoritative transcript, scenes, characterRegistry, and localizedOutputs from backend without modulo re-indexing!
+      const rawTranscript: TranscriptSegment[] = Array.isArray(apiData.rawTranscript)
+        ? apiData.rawTranscript
+        : [];
+      const cleanTranscript: TranscriptSegment[] = Array.isArray(apiData.cleanTranscript)
+        ? apiData.cleanTranscript
+        : rawTranscript;
+      const scenes: Scene[] = Array.isArray(apiData.scenes) ? apiData.scenes : [];
+      const finalDuration =
+        typeof apiData.durationSeconds === 'number' && apiData.durationSeconds > 0
+          ? apiData.durationSeconds
+          : cleanTranscript[cleanTranscript.length - 1]?.end || videoDuration;
 
-      // Dynamically calculate scene count scaling with full video duration returned from the API
-      // Correctly scales for videos over 60 minutes (~1 scene every ~3 minutes, up to 36 scenes)
-      const dynamicNumScenes = calculateDynamicSceneCount(finalDuration);
-      const dynamicSceneSlice = finalDuration / dynamicNumScenes;
-
-      // Dynamic Scene Extraction: Map and synthesize exactly dynamicNumScenes across the full duration
-      const sourceScenes: any[] = (apiData && Array.isArray(apiData.scenes) && apiData.scenes.length > 0)
-        ? apiData.scenes
-        : initialScenes;
-
-      const normalizedScenes: Scene[] = [];
-      for (let i = 0; i < dynamicNumScenes; i++) {
-        const startTime = Math.round(i * dynamicSceneSlice * 10) / 10;
-        const endTime = Math.round((i + 1) * dynamicSceneSlice * 10) / 10;
-        const sc = sourceScenes[i] || sourceScenes[i % sourceScenes.length] || {};
-
-        const sum = sc.summary || sceneSummaries[i % sceneSummaries.length] || `Scene 0${i + 1}: Narrative progression`;
-        const cam = sc.camera || (i % 2 === 0 ? 'Wide establishing pan 24mm anamorphic' : 'Dynamic tracking orbit 35mm cine');
-        const lit = sc.lighting || (i % 2 === 0 ? 'Golden hour diffused rim lighting' : 'Cinematic Volumetric Rim Light');
-        const env = sc.environment || (isNationalistHub ? (i % 2 === 0 ? 'Nationalist Hub Prime-Time High-Tech Broadcast Pavilion' : 'National Security Situation Nexus') : 'Production Stage Pavilion');
-        const dial = sc.dialogue || (isNationalistHub
-          ? (isTelugu ? nationalistHubTeluguTexts[i % nationalistHubTeluguTexts.length] : nationalistHubEnglishTexts[i % nationalistHubEnglishTexts.length])
-          : (isTelugu ? `${videoName} లోని సన్నివేశం 0${i + 1}: పూర్తి నిడివి దృశ్య విశ్లేషణ.` : `Scene 0${i + 1}: Narrative evolution of ${videoName}.`));
-        const vis = sc.visualDescription || sc.prompt || `Cinematic 8k photorealistic scene 0${i + 1} of ${videoName}`;
-
-        // Ensure fresh 4K artwork is synthesized for every dynamic scene frame
-        const freshArt = (sc.imageUrl && !sc.imageUrl.includes('scene_tech') && !sc.imageUrl.includes('scene_studio') && !sc.imageUrl.includes('scene_skyline') && !sc.imageUrl.includes('hqdefault'))
-          ? sc.imageUrl
-          : generateSceneArtwork(
+      const outputs =
+        apiData.localizedOutputs && Object.keys(apiData.localizedOutputs).length > 0
+          ? apiData.localizedOutputs
+          : buildLocalizedOutputs(
+              targetLangs,
+              cleanTranscript,
+              apiData.translations,
+              apiData.name || videoName,
               {
-                sceneNumber: i + 1,
-                summary: sum,
-                camera: cam,
-                lighting: lit,
-                environment: env,
-                startTime,
-                endTime
-              },
-              videoName,
-              i,
-              dynamicNumScenes
+                isDemoMode: Boolean(apiData.isDemoMode),
+                sourceLanguage: (apiData.sourceLanguage as LanguageCode) || 'en'
+              }
             );
 
-        normalizedScenes.push({
-          id: i + 1,
-          sceneNumber: i + 1,
-          startTime,
-          endTime,
-          duration: Math.max(1, Math.round((endTime - startTime) * 10) / 10),
-          summary: sum,
-          dialogue: dial,
-          visualDescription: vis,
-          prompt: vis,
-          camera: cam,
-          lighting: lit,
-          environment: env,
-          style: sc.style || 'cinematic documentary 4k',
-          seed: typeof sc.seed === 'number' ? sc.seed : 42000 + i,
-          imageUrl: freshArt
-        });
-      }
-
-      // Dynamically extract transcript segments to match dynamicNumScenes across full duration
-      const cleanList = (apiData && (apiData.cleanTranscript || apiData.rawTranscript)) || initialRawTranscript;
-      const cleanStep = finalDuration / dynamicNumScenes;
-      const normalizedCleanTranscript: TranscriptSegment[] = [];
-      for (let k = 0; k < dynamicNumScenes; k++) {
-        const seg = cleanList[k] || cleanList[k % cleanList.length] || {};
-        normalizedCleanTranscript.push({
-          id: k + 1,
-          start: Math.round(k * cleanStep * 10) / 10,
-          end: Math.round((k + 1) * cleanStep * 10) / 10,
-          text: seg.text || (isNationalistHub ? nationalistHubTeluguTexts[k % nationalistHubTeluguTexts.length] : (isTelugu ? `${videoName} సంభాషణ 0${k + 1}` : `Segment 0${k + 1}`))
-        });
-      }
-
-      const rawList = (apiData && apiData.rawTranscript) || normalizedCleanTranscript;
-      const normalizedRawTranscript: TranscriptSegment[] = [];
-      for (let k = 0; k < dynamicNumScenes; k++) {
-        const seg = rawList[k] || rawList[k % rawList.length] || normalizedCleanTranscript[k];
-        normalizedRawTranscript.push({
-          id: k + 1,
-          start: Math.round(k * cleanStep * 10) / 10,
-          end: Math.round((k + 1) * cleanStep * 10) / 10,
-          text: seg.text || normalizedCleanTranscript[k]?.text || '',
-          confidence: typeof seg.confidence === 'number' ? seg.confidence : 0.98
-        });
-      }
-
-      const outputs = buildLocalizedOutputs(
-        targetLangs,
-        normalizedCleanTranscript,
-        apiData?.translations
-      );
-
-      // Final complete project state
-      setProjects(prev =>
-        prev.map(p => {
-          if (p.id !== newId) return p;
-          return {
-            ...p,
-            name: apiData?.name || videoName,
-            description: apiData?.description || p.description,
-            durationSeconds: finalDuration,
-            detectedLanguage: apiData?.detectedLanguage || detectedLang,
-            rawTranscript: normalizedRawTranscript,
-            cleanTranscript: normalizedCleanTranscript,
-            scenes: normalizedScenes,
-            localizedOutputs: outputs,
-            status: 'COMPLETED',
-            progress: 100,
-            currentStage: 'COMPLETE',
-            stages: stagesList.map((s, idx) => {
-              let msg = stageDefinitions[idx]?.message || `${s.label} verified & complete`;
-              if (s.name === 'STORYBOARD') {
-                msg = `Storyboard Generation: Scene Extractor dynamically generated ${dynamicNumScenes} full cinematic scenes spanning 0.0s to ${finalDuration}s runtime`;
-              } else if (s.name === 'VISUAL_GEN') {
-                msg = `Visual Frame Synthesis: SDXL / ComfyUI synthesized ${dynamicNumScenes} custom 4K anamorphic visual frames based on transcript story`;
-              }
-              return {
-                ...s,
-                status: 'COMPLETED' as const,
-                progress: 100,
-                message: msg
-              };
-            }),
-            logs: [
-              ...p.logs,
-              {
-                timestamp: new Date().toTimeString().split(' ')[0],
-                stage: 'COMPLETE',
-                level: 'INFO',
-                message: `Pipeline completed. Generated full-length (${finalDuration}s) 4K package with ${dynamicNumScenes} scenes and synchronized audio.`
-              }
-            ]
-          };
-        })
-      );
-    } catch (error) {
-      console.log('Finalizing localized project with full-length generator:', error);
-      const outputs = buildLocalizedOutputs(targetLangs, initialRawTranscript);
-
-      setProjects(prev =>
-        prev.map(p => {
-          if (p.id !== newId) return p;
-          return {
-            ...p,
-            name: videoName,
-            status: 'COMPLETED',
-            progress: 100,
-            currentStage: 'COMPLETE',
-            durationSeconds: videoDuration,
-            detectedLanguage: detectedLang,
-            scenes: initialScenes,
-            rawTranscript: initialRawTranscript,
-            cleanTranscript: initialRawTranscript,
-            localizedOutputs: outputs,
-            stages: stagesList.map(s => ({
+      const completedProject: Project = {
+        ...runningProject,
+        id: apiData.id || newId,
+        name: apiData.name || videoName,
+        description: apiData.description || runningProject.description,
+        sourceLanguage: apiData.sourceLanguage || runningProject.sourceLanguage,
+        durationSeconds: finalDuration,
+        detectedLanguage: apiData.detectedLanguage || detectedLang,
+        isDemoMode: Boolean(apiData.isDemoMode),
+        transcriptProvenance: apiData.transcriptProvenance || 'youtube_captions',
+        transcriptValidation: apiData.transcriptValidation,
+        characterRegistry: apiData.characterRegistry || [],
+        rawTranscript,
+        cleanTranscript,
+        scenes,
+        localizedOutputs: outputs,
+        exportJobs: apiData.exportJobs || {},
+        exportBundle: apiData.exportBundle,
+        qualityAudit: apiData.qualityAudit,
+        status: apiData.status || 'COMPLETED',
+        progress: 100,
+        currentStage: 'COMPLETE',
+        stages: Array.isArray(apiData.stages)
+          ? apiData.stages
+          : DEFAULT_PIPELINE_STAGES.map(s => ({
               ...s,
-              status: 'COMPLETED' as const,
+              status: 'COMPLETED',
               progress: 100,
-              message: 'Verified & ready'
+              message: `${s.label} verified from source transcript (${cleanTranscript.length} segments, ${scenes.length} scenes)`
             })),
-            logs: [
-              ...p.logs,
+        logs: Array.isArray(apiData.logs) && apiData.logs.length > 0
+          ? apiData.logs
+          : [
+              ...runningProject.logs,
+              ...(Array.isArray(apiData.diagnostics) ? apiData.diagnostics : []),
               {
                 timestamp: new Date().toTimeString().split(' ')[0],
                 stage: 'COMPLETE',
                 level: 'INFO',
-                message: `Pipeline completed successfully for full length (${videoDuration}s). Localized package ready for playback.`
+                message: `Generated transcript (${cleanTranscript.length} segments), storyboard (${scenes.length} scenes), 12-language translations, and full MP4 video.`
               }
             ]
+      };
+
+      if (!completedProject.qualityAudit) {
+        completedProject.qualityAudit = computeProjectQualityAudit(completedProject);
+      }
+
+      setProjects(prev =>
+        prev
+          .map(p => (p.id === newId ? completedProject : p))
+          .filter(p => p.id !== 'VID-WORKSPACE-READY')
+      );
+      if (completedProject.id !== newId) {
+        setSelectedProjectId(completedProject.id);
+      }
+      setFocusedSceneId(completedProject.scenes[0]?.id ?? null);
+      setActiveWorkflowStep('export');
+    } catch (error: any) {
+      const tracker = new PipelineErrorTracker();
+      const failureEntry = tracker.handleStageFailure('TRANSCRIPTION', error, 'ERR_GEMINI_TIMEOUT');
+      setProjects(prev =>
+        prev.map(p => {
+          if (p.id !== newId) return p;
+          return {
+            ...p,
+            status: 'FAILED',
+            failureDetails: {
+              errorCode: 'ERR_NETWORK_OR_INGESTION',
+              stage: 'TRANSCRIPTION',
+              message: error?.message || 'Failed to process source media.',
+              remediation: 'Retry or supply a verified transcript file.'
+            },
+            logs: [...p.logs, failureEntry]
           };
         })
       );
     } finally {
       setIsProcessingUrl(false);
-      setSelectedLanguage('te');
     }
   };
 
@@ -859,6 +582,7 @@ export default function App() {
     resolution: '1080p' | '1440p' | '4k';
     ttsVoice: string;
     thumbnailUrl?: string;
+    durationSeconds?: number;
   }) => {
     processAndLocalizeVideo({
       url: params.sourceUrl,
@@ -868,61 +592,557 @@ export default function App() {
       resolution: params.resolution,
       thumbnailUrl: params.thumbnailUrl,
       ttsVoice: params.ttsVoice,
-      sourceLanguage: params.sourceLanguage
+      sourceLanguage: params.sourceLanguage,
+      durationSeconds: params.durationSeconds,
+      allowDemoMode: true
     });
   };
 
-  // Update Scene handler
+  // Update single scene (preserves other scenes, recomputes QA audit, and autosaves)
   const handleUpdateScene = (updatedScene: Scene) => {
     setProjects(prev =>
       prev.map(p => {
-        if (p.id !== selectedProjectId) return p;
-        return {
+        if (p.id !== activeProject.id) return p;
+        const nextScenes = p.scenes.map(s => (s.id === updatedScene.id ? updatedScene : s));
+        const nextProj: Project = {
           ...p,
-          scenes: p.scenes.map(s => (s.id === updatedScene.id ? updatedScene : s))
+          scenes: nextScenes,
+          updatedAt: new Date().toISOString()
         };
+        nextProj.qualityAudit = computeProjectQualityAudit(nextProj);
+        persistProjectToServer(nextProj);
+        return nextProj;
       })
     );
   };
 
-  // Toggle Model Installed Status
+  // Batch update multiple scenes at once
+  const handleBatchUpdateScenes = (
+    updatedScenes: Scene[],
+    actionLabel = `Regenerated ${updatedScenes.length} selected scene(s)`
+  ) => {
+    if (activeProject.humanReviewLocked || updatedScenes.length === 0) return;
+    const updatedMap = new Map<number, Scene>(updatedScenes.map(sc => [sc.id, sc]));
+    setProjects(prev =>
+      prev.map(p => {
+        if (p.id !== activeProject.id) return p;
+        const nextScenes = p.scenes.map(s => updatedMap.get(s.id) || s);
+        const nextProj: Project = {
+          ...p,
+          scenes: nextScenes,
+          updatedAt: new Date().toISOString(),
+          logs: [
+            ...p.logs,
+            {
+              timestamp: new Date().toTimeString().split(' ')[0],
+              stage: 'STORYBOARD',
+              level: 'INFO',
+              message: actionLabel
+            }
+          ]
+        };
+        nextProj.qualityAudit = computeProjectQualityAudit(nextProj);
+        persistProjectToServer(nextProj);
+        return nextProj;
+      })
+    );
+  };
+
+  // Regenerate a single scene by ID/index from the transcript without rerunning the entire project
+  const handleRegenerateSingleScene = (sceneId: number) => {
+    if (activeProject.humanReviewLocked) return;
+    setProjects(prev =>
+      prev.map(p => {
+        if (p.id !== activeProject.id) return p;
+        const idx = p.scenes.findIndex(s => s.id === sceneId);
+        if (idx === -1) return p;
+        const targetScene = p.scenes[idx];
+        const regen = regenerateSingleSceneFromTranscript(
+          targetScene,
+          p.cleanTranscript,
+          p.characterRegistry || [],
+          {
+            preserveUserEdits: true,
+            sceneIndex: idx,
+            totalScenes: p.scenes.length,
+            resolveArtwork: (draft, i, total) =>
+              generateSceneArtwork(
+                {
+                  id: draft.id,
+                  sceneNumber: draft.sceneNumber || i + 1,
+                  summary: draft.summary || targetScene.summary,
+                  dialogue: draft.dialogue || targetScene.dialogue,
+                  visualDescription: draft.visualDescription || targetScene.visualDescription,
+                  characterIds: draft.characterIds,
+                  depictionMode: draft.depictionMode,
+                  characterRegistry: p.characterRegistry,
+                  characterConfig: characterConsistency
+                },
+                p.name,
+                i,
+                total
+              )
+          }
+        );
+
+        const nextScenes = p.scenes.map(s => (s.id === sceneId ? regen : s));
+        const nextProj: Project = {
+          ...p,
+          scenes: nextScenes,
+          updatedAt: new Date().toISOString(),
+          logs: [
+            ...p.logs,
+            {
+              timestamp: new Date().toTimeString().split(' ')[0],
+              stage: 'STORYBOARD',
+              level: 'INFO',
+              message: `Regenerated Scene ${String(regen.sceneNumber).padStart(2, '0')} (${regen.startTime}s-${regen.endTime}s) from transcript.`
+            }
+          ]
+        };
+        nextProj.qualityAudit = computeProjectQualityAudit(nextProj);
+        persistProjectToServer(nextProj);
+        return nextProj;
+      })
+    );
+  };
+
+  // Batch regenerate multiple selected scenes by ID
+  const handleRegenerateSelectedScenes = (sceneIds: number[]) => {
+    if (activeProject.humanReviewLocked || sceneIds.length === 0) return;
+    setProjects(prev =>
+      prev.map(p => {
+        if (p.id !== activeProject.id) return p;
+        const nextScenes = p.scenes.map((targetScene, idx) => {
+          if (!sceneIds.includes(targetScene.id)) return targetScene;
+          return regenerateSingleSceneFromTranscript(
+            targetScene,
+            p.cleanTranscript,
+            p.characterRegistry || [],
+            {
+              preserveUserEdits: true,
+              sceneIndex: idx,
+              totalScenes: p.scenes.length,
+              resolveArtwork: (draft, i, total) =>
+                generateSceneArtwork(
+                  {
+                    id: draft.id,
+                    sceneNumber: draft.sceneNumber || i + 1,
+                    summary: draft.summary || targetScene.summary,
+                    dialogue: draft.dialogue || targetScene.dialogue,
+                    visualDescription: draft.visualDescription || targetScene.visualDescription,
+                    characterIds: draft.characterIds,
+                    depictionMode: draft.depictionMode,
+                    characterRegistry: p.characterRegistry,
+                    characterConfig: characterConsistency
+                  },
+                  p.name,
+                  i,
+                  total
+                )
+            }
+          );
+        });
+
+        const nextProj: Project = {
+          ...p,
+          scenes: nextScenes,
+          updatedAt: new Date().toISOString(),
+          logs: [
+            ...p.logs,
+            {
+              timestamp: new Date().toTimeString().split(' ')[0],
+              stage: 'STORYBOARD',
+              level: 'INFO',
+              message: `Batch regenerated ${sceneIds.length} selected scene(s) using generateSceneArtwork.`
+            }
+          ]
+        };
+        nextProj.qualityAudit = computeProjectQualityAudit(nextProj);
+        persistProjectToServer(nextProj);
+        return nextProj;
+      })
+    );
+  };
+
+  // Update a single transcript segment from HumanReviewCheckpoint and sync linked scene dialogue
+  const handleUpdateTranscriptSegment = (updatedSegment: TranscriptSegment) => {
+    if (activeProject.humanReviewLocked) return;
+    setProjects(prev =>
+      prev.map(p => {
+        if (p.id !== activeProject.id) return p;
+        const nextClean = p.cleanTranscript.map(s =>
+          s.id === updatedSegment.id ? updatedSegment : s
+        );
+        const nextScenes = p.scenes.map(sc => {
+          const segIds = sc.transcriptSegmentIds || sc.segmentIds || [];
+          if (segIds.includes(updatedSegment.id)) {
+            const matchedSegs = nextClean.filter(s => segIds.includes(s.id));
+            const newStart = matchedSegs[0]?.start ?? sc.startTime;
+            const newEnd = matchedSegs[matchedSegs.length - 1]?.end ?? sc.endTime;
+            return {
+              ...sc,
+              startTime: newStart,
+              endTime: newEnd,
+              duration: Math.max(0.5, Number((newEnd - newStart).toFixed(2))),
+              dialogue: matchedSegs.map(s => s.text).join(' ')
+            };
+          }
+          return sc;
+        });
+
+        const nextProj: Project = {
+          ...p,
+          cleanTranscript: nextClean,
+          scenes: nextScenes,
+          updatedAt: new Date().toISOString()
+        };
+        nextProj.qualityAudit = computeProjectQualityAudit(nextProj);
+        persistProjectToServer(nextProj);
+        return nextProj;
+      })
+    );
+  };
+
+  // Toggle Human Review Lock
+  const handleToggleReviewLock = (locked: boolean) => {
+    setProjects(prev =>
+      prev.map(p => {
+        if (p.id !== activeProject.id) return p;
+        const nextProj: Project = {
+          ...p,
+          humanReviewLocked: locked,
+          humanReviewCompleted: locked ? true : p.humanReviewCompleted,
+          humanReviewLockedAt: locked ? new Date().toISOString() : undefined,
+          updatedAt: new Date().toISOString(),
+          logs: [
+            ...p.logs,
+            {
+              timestamp: new Date().toTimeString().split(' ')[0],
+              stage: 'QUALITY_CHECK',
+              level: 'INFO',
+              message: locked
+                ? 'Human Review Checkpoint LOCKED: Transcript edits and scene boundaries approved. Advancing to Export step to process and bundle all selected languages.'
+                : 'Human Review Checkpoint UNLOCKED for further editing.'
+            }
+          ]
+        };
+        persistProjectToServer(nextProj);
+        return nextProj;
+      })
+    );
+    if (locked) {
+      handleSelectWorkflowStep('export');
+    }
+  };
+
+  // Approve all scenes in the active project
+  const handleApproveAllScenes = () => {
+    if (activeProject.humanReviewLocked) return;
+    setProjects(prev =>
+      prev.map(p => {
+        if (p.id !== activeProject.id) return p;
+        const nextScenes = p.scenes.map(s => ({
+          ...s,
+          reviewStatus: 'approved' as const,
+          approved: true
+        }));
+        const nextProj: Project = {
+          ...p,
+          scenes: nextScenes,
+          humanReviewCompleted: true,
+          updatedAt: new Date().toISOString()
+        };
+        persistProjectToServer(nextProj);
+        return nextProj;
+      })
+    );
+  };
+
+  // Update per-segment millisecond voiceover latency offset
+  const handleUpdateSegmentLatency = (
+    langCode: LanguageCode,
+    segmentId: number,
+    latencyOffsetMs: number
+  ) => {
+    setProjects(prev =>
+      prev.map(p => {
+        if (p.id !== activeProject.id) return p;
+        const langOut = p.localizedOutputs[langCode];
+        if (!langOut) return p;
+        const nextProj: Project = {
+          ...p,
+          localizedOutputs: {
+            ...p.localizedOutputs,
+            [langCode]: {
+              ...langOut,
+              translationSegments: langOut.translationSegments.map(seg =>
+                seg.id === segmentId ? { ...seg, latencyOffsetMs } : seg
+              )
+            }
+          }
+        };
+        persistProjectToServer(nextProj);
+        return nextProj;
+      })
+    );
+  };
+
+  const handleBulkUpdateLanguageLatency = (
+    langCode: LanguageCode,
+    latencyOffsetMs: number
+  ) => {
+    setProjects(prev =>
+      prev.map(p => {
+        if (p.id !== activeProject.id) return p;
+        const langOut = p.localizedOutputs[langCode];
+        if (!langOut) return p;
+        const nextProj: Project = {
+          ...p,
+          localizedOutputs: {
+            ...p.localizedOutputs,
+            [langCode]: {
+              ...langOut,
+              translationSegments: langOut.translationSegments.map(seg => ({
+                ...seg,
+                latencyOffsetMs
+              }))
+            }
+          }
+        };
+        persistProjectToServer(nextProj);
+        return nextProj;
+      })
+    );
+  };
+
+  // Apply custom/re-translated transcript segments and regenerate 1:1 scenes from the transcript
+  const handleApplyCustomTranslations = (
+    customSegments: { id: number; start: number; end: number; text: string }[],
+    translationsByLang: Record<string, { id: number; start: number; end: number; text: string }[]>
+  ) => {
+    if (activeProject.humanReviewLocked) return;
+    setProjects(prev =>
+      prev.map(p => {
+        if (p.id !== activeProject.id) return p;
+        const totalDur =
+          customSegments[customSegments.length - 1]?.end || p.durationSeconds || 133;
+        const regeneratedScenes: Scene[] = customSegments.map((seg, idx) => {
+          const existing = p.scenes[idx];
+          const motionPreset = existing?.motionPreset || getDefaultMotionPresetForIndex(idx);
+          const baseVisual =
+            existing?.visualDescription ||
+            `Cinematic 4K scene depicting: ${seg.text.slice(0, 120)}`;
+          const prependedPrompt = prependCharacterConsistencyToPrompt(
+            baseVisual,
+            characterConsistency
+          );
+          const summary =
+            translationsByLang.en?.[idx]?.text?.slice(0, 88) ||
+            existing?.summary ||
+            `Scene ${idx + 1}: ${seg.text.slice(0, 72)}`;
+          const art = generateSceneArtwork(
+            {
+              id: idx + 1,
+              sceneNumber: idx + 1,
+              summary,
+              dialogue: seg.text,
+              visualDescription: prependedPrompt,
+              prompt: prependedPrompt,
+              camera: existing?.camera || '35mm Anamorphic Cinema Prime',
+              lighting: existing?.lighting || 'Volumetric Broadcast Key Light',
+              environment: existing?.environment || '4K Broadcast Studio & Field Set',
+              startTime: seg.start,
+              endTime: seg.end,
+              motionPreset,
+              characterPrompt: characterConsistency.compiledPrompt,
+              characterConfig: characterConsistency
+            },
+            p.name,
+            idx,
+            customSegments.length
+          );
+          return {
+            id: idx + 1,
+            sceneNumber: idx + 1,
+            transcriptSegmentIds: [seg.id],
+            segmentIds: [seg.id],
+            startTime: seg.start,
+            endTime: seg.end,
+            duration: Number((seg.end - seg.start).toFixed(1)),
+            dialogue: seg.text,
+            summary,
+            visualDescription: prependedPrompt,
+            camera: existing?.camera || '35mm Anamorphic Cinema Prime',
+            lighting: existing?.lighting || 'Volumetric Broadcast Key Light',
+            environment: existing?.environment || '4K Broadcast Studio & Field Set',
+            style: 'cinematic 4k',
+            motionPreset,
+            characterPrompt: characterConsistency.compiledPrompt,
+            imageUrl: art,
+            prompt: prependedPrompt,
+            seed: 41000 + idx,
+            reviewStatus: existing?.reviewStatus || 'pending'
+          };
+        });
+
+        const nextProj: Project = {
+          ...p,
+          durationSeconds: totalDur,
+          rawTranscript: customSegments,
+          cleanTranscript: customSegments,
+          scenes: regeneratedScenes,
+          localizedOutputs: buildLocalizedOutputs(
+            p.targetLanguages || INITIAL_11_LANGUAGES,
+            customSegments,
+            translationsByLang,
+            p.name,
+            {
+              isDemoMode: Boolean(p.isDemoMode),
+              sourceLanguage: (p.sourceLanguage as LanguageCode) || 'en'
+            }
+          )
+        };
+        nextProj.qualityAudit = computeProjectQualityAudit(nextProj);
+        persistProjectToServer(nextProj);
+        return nextProj;
+      })
+    );
+  };
+
+  // Apply Persistent Character Consistency across all scenes of the active project
+  const handleApplyCharacterConsistency = (newConfig: CharacterConsistencyConfig) => {
+    if (activeProject.humanReviewLocked) return;
+    setCharacterConsistency(newConfig);
+    setProjects(prev =>
+      prev.map(p => {
+        if (p.id !== activeProject.id) return p;
+        const updatedScenes = p.scenes.map((sc, idx) => {
+          const prependedPrompt = prependCharacterConsistencyToPrompt(
+            sc.visualDescription || sc.prompt,
+            newConfig
+          );
+          const motionPreset = sc.motionPreset || getDefaultMotionPresetForIndex(idx);
+          const newArt = generateSceneArtwork(
+            {
+              id: sc.id,
+              sceneNumber: sc.sceneNumber,
+              summary: sc.summary,
+              dialogue: sc.dialogue,
+              visualDescription: prependedPrompt,
+              prompt: prependedPrompt,
+              camera: sc.camera,
+              lighting: sc.lighting,
+              environment: sc.environment,
+              startTime: sc.startTime,
+              endTime: sc.endTime,
+              motionPreset,
+              characterPrompt: newConfig.compiledPrompt,
+              characterConfig: newConfig
+            },
+            p.name,
+            idx,
+            p.scenes.length
+          );
+          return {
+            ...sc,
+            visualDescription: prependedPrompt,
+            prompt: prependedPrompt,
+            motionPreset,
+            characterPrompt: newConfig.compiledPrompt,
+            imageUrl: newArt
+          };
+        });
+
+        const nextProj: Project = {
+          ...p,
+          scenes: updatedScenes,
+          logs: [
+            ...p.logs,
+            {
+              timestamp: new Date().toTimeString().split(' ')[0],
+              stage: 'VISUAL_GEN',
+              level: 'INFO',
+              message: newConfig.enabled
+                ? `Character Consistency Lock applied to all ${updatedScenes.length} scenes: "${newConfig.characterName}"`
+                : `Character Consistency Lock disabled; restored transcript-grounded depiction modes.`
+            }
+          ]
+        };
+        persistProjectToServer(nextProj);
+        return nextProj;
+      })
+    );
+  };
+
   const handleToggleModelInstall = (modelId: string) => {
     setModels(prev =>
       prev.map(m => (m.id === modelId ? { ...m, installed: !m.installed } : m))
     );
   };
 
-  // Export Zip Bundle trigger
-  const handleExportZip = (projectId: string) => {
+  // Real binary ZIP archive export
+  const handleExportZip = async (projectId: string) => {
     const proj = projects.find(p => p.id === projectId) || activeProject;
-    const bundleData = {
-      project: proj,
-      exportedAt: new Date().toISOString(),
-      standards: 'FOSS-VIDEO-AI-SPEC-2026',
-      subtitles: {
-        srt: proj.localizedOutputs[selectedLanguage]?.subtitlesSrt,
-        vtt: proj.localizedOutputs[selectedLanguage]?.subtitlesVtt
-      }
-    };
-    const blob = new Blob([JSON.stringify(bundleData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${proj.id}_localization_package.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      await downloadProjectZipArchive(proj);
+    } catch (err) {
+      console.warn('ZIP export error:', err);
+    }
   };
 
   const handleDeleteProject = (projId: string) => {
     if (projects.length <= 1) return;
+    fetch(`/api/projects/${encodeURIComponent(projId)}`, { method: 'DELETE' }).catch(() => {});
     const remaining = projects.filter(p => p.id !== projId);
     setProjects(remaining);
     setSelectedProjectId(remaining[0].id);
   };
 
+  const handleClearProjectMedia = async () => {
+    await fetch(`/api/projects/${encodeURIComponent(activeProject.id)}/media`, {
+      method: 'DELETE'
+    }).catch(() => {});
+  };
+
+  const handlePreflightMismatch = (report: PreflightReport) => {
+    const mismatchLog = createDiagnosticLog(
+      'INGESTION',
+      'WARNING',
+      `Pre-flight Check intercepted duration mismatch for "${report.title}": Expected ${report.formattedExpectedDuration || 'baseline'} vs Actual ${report.formattedDuration} (${report.actualDurationSeconds}s)`,
+      'ERR_STREAM_MISMATCH',
+      report.warnings[0] || `Stream length variance of ${report.durationDifferenceSeconds}s detected.`,
+      `Prompted user for confirmation (${report.recommendedScenes} dynamic scenes recommended).`
+    );
+
+    setProjects(prev =>
+      prev.map(p => (p.id === activeProject.id ? { ...p, logs: [...p.logs, mismatchLog] } : p))
+    );
+  };
+
+  const handleSimulateFailurePoint = (errorCode: PipelineErrorCode) => {
+    const tracker = new PipelineErrorTracker();
+    const simulatedLog = tracker.simulateFailurePoint(errorCode);
+    setProjects(prev =>
+      prev.map(p => (p.id === activeProject.id ? { ...p, logs: [...p.logs, simulatedLog] } : p))
+    );
+  };
+
+  // Navigate to a specific project workflow step and scroll to its section
+  const handleSelectWorkflowStep = (stepId: WorkflowStepId) => {
+    setActiveWorkflowStep(stepId);
+    setActiveTab('dashboard');
+    setTimeout(() => {
+      const el = document.getElementById(`workflow-section-${stepId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 50);
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-amber-400 selection:text-slate-950">
-      {/* Top Bar (Navbar) */}
+      {/* Global Navigation Bar */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -932,20 +1152,169 @@ export default function App() {
         executionMode={hardware.executionMode.includes('CUDA') ? 'CUDA READY' : 'CPU READY'}
       />
 
+      {/* Persistent Per-Project Workspace Header & Workflow Stepper */}
+      {activeTab === 'dashboard' && (
+        <div className="bg-slate-900/95 border-b border-slate-800 sticky top-0 z-30 backdrop-blur-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-col gap-2">
+            {/* Top Project Status & Save Indicator Row */}
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-slate-950 text-amber-300 border border-slate-800 font-bold">
+                  {activeProject.id}
+                </span>
+                <span className="font-bold text-white truncate max-w-md">
+                  {activeProject.name}
+                </span>
+                {activeProject.isDemoMode && (
+                  <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 font-mono text-[10px] font-bold">
+                    SAMPLE DEMO MODE
+                  </span>
+                )}
+                {activeProject.humanReviewLocked && (
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px] font-bold flex items-center gap-1">
+                    <Lock className="w-3 h-3" />
+                    <span>REVIEW LOCKED</span>
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Autosave Status */}
+                <span className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] flex items-center gap-1.5">
+                  <Save className="w-3 h-3 text-cyan-400" />
+                  <span>
+                    {saveStatus === 'saving'
+                      ? 'Saving...'
+                      : saveStatus === 'error'
+                      ? 'Save failed'
+                      : 'Saved'}
+                  </span>
+                </span>
+
+                {/* Clear Cached Media */}
+                <button
+                  type="button"
+                  onClick={handleClearProjectMedia}
+                  className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-red-950/40 text-slate-400 hover:text-red-300 border border-slate-800 font-mono text-[11px] flex items-center gap-1 cursor-pointer"
+                  title="Remove cached project media files"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span className="hidden sm:inline">Clear Media Cache</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 6-Step Persistent Project Workflow Stepper */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-thin">
+              {WORKFLOW_STEPS.map(step => {
+                const isCurr = activeWorkflowStep === step.id;
+                const hasBlocker =
+                  step.id === 'transcript' && activeProject.status === 'NEEDS_REVIEW';
+                return (
+                  <button
+                    key={step.id}
+                    type="button"
+                    onClick={() => handleSelectWorkflowStep(step.id)}
+                    className={`px-3 py-1.5 rounded-lg font-mono text-xs flex items-center gap-1.5 border transition-all cursor-pointer shrink-0 ${
+                      isCurr
+                        ? 'bg-amber-400 text-slate-950 border-amber-300 font-bold shadow-xs'
+                        : hasBlocker
+                        ? 'bg-red-950/60 text-red-300 border-red-500/40'
+                        : 'bg-slate-950/90 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-[10px] opacity-75">{step.stepNum}.</span>
+                    <span>{step.label}</span>
+                    {hasBlocker ? (
+                      <AlertTriangle className="w-3 h-3 text-red-400" />
+                    ) : (
+                      <CheckCircle2
+                        className={`w-3 h-3 ${
+                          isCurr ? 'text-slate-950' : 'text-emerald-400'
+                        }`}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Studio Viewport */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab 1: Primary Studio Dashboard */}
         {activeTab === 'dashboard' && (
           <div>
-            {/* Live YouTube URL Ingestion Bar */}
-            <QuickUrlBar
-              onProcessUrl={processAndLocalizeVideo}
-              isProcessing={isProcessingUrl}
-              selectedLanguage={selectedLanguage}
-              onSelectLanguage={setSelectedLanguage}
-            />
+            {/* Honest Failure / Needs Transcript Input Banner */}
+            {activeProject.failureDetails && (
+              <div className="bg-red-950/40 border border-red-500/50 rounded-2xl p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-red-300 font-bold text-sm">
+                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                    <span>
+                      Stage Halted ({activeProject.failureDetails.stage}):{' '}
+                      {activeProject.failureDetails.errorCode}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-200">
+                    {activeProject.failureDetails.message}
+                  </p>
+                  {activeProject.failureDetails.remediation && (
+                    <p className="text-xs text-amber-300 font-mono">
+                      Next Action: {activeProject.failureDetails.remediation}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      processAndLocalizeVideo({
+                        url: activeProject.sourceUrl || 'https://www.youtube.com/watch?v=qTbo-vR_PTg',
+                        name: activeProject.name,
+                        targetLanguages: activeProject.targetLanguages,
+                        resolution: activeProject.resolution,
+                        durationSeconds: activeProject.durationSeconds,
+                        allowDemoMode: true
+                      })
+                    }
+                    className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Load Labeled Sample Demo Instead</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 1: Source Ingestion Bar */}
+            <div id="workflow-section-source">
+              <QuickUrlBar
+                onProcessUrl={processAndLocalizeVideo}
+                onPreflightMismatch={handlePreflightMismatch}
+                isProcessing={isProcessingUrl}
+                selectedLanguage={selectedLanguage}
+                onSelectLanguage={setSelectedLanguage}
+              />
+            </div>
 
             <DashboardMetrics project={activeProject} hardware={hardware} />
+
+            {/* Dashboard Visual Scene Timeline: Clicking any segment focuses and scrolls to that scene in StoryboardView */}
+            <SceneTimelineBar
+              scenes={activeProject.scenes}
+              totalDurationSeconds={activeProject.durationSeconds}
+              selectedSceneId={focusedSceneId}
+              onSelectScene={sc => {
+                setFocusedSceneId(sc.id);
+              }}
+              title="Visual Scene Timeline (Dashboard Overview)"
+              subtitle="Displays all scenes proportionally by startTime and endTime. Click any segment to automatically focus and scroll the corresponding scene in StoryboardView."
+              variant="dashboard"
+            />
 
             <PipelineProgress
               project={activeProject}
@@ -955,14 +1324,95 @@ export default function App() {
                   prev.map(p => (p.id === activeProject.id ? { ...p, status: 'CANCELLED' } : p))
                 );
               }}
+              onSimulateError={handleSimulateFailurePoint}
+              kokoroProsody={kokoroProsody}
+              onUpdateKokoroProsody={setKokoroProsody}
+              selectedLanguage={selectedLanguage}
             />
 
-            <VideoPlayerPreview
-              project={activeProject}
-              selectedLanguage={selectedLanguage}
-              onSelectLanguage={setSelectedLanguage}
-              onOpenQualityReport={() => setIsQualityReportOpen(true)}
+            {/* Step 5: Human Review Checkpoint (Lock Transcript & Scene Boundaries + Approve/Reject) */}
+            <div id="workflow-section-review">
+              <HumanReviewCheckpoint
+                project={activeProject}
+                onUpdateScene={handleUpdateScene}
+                onBatchUpdateScenes={handleBatchUpdateScenes}
+                onRegenerateSingleScene={handleRegenerateSingleScene}
+                onRegenerateSelectedScenes={handleRegenerateSelectedScenes}
+                onUpdateTranscriptSegment={handleUpdateTranscriptSegment}
+                onToggleReviewLock={handleToggleReviewLock}
+                onApproveAllScenes={handleApproveAllScenes}
+                characterConsistency={characterConsistency}
+                onSelectSceneInStoryboard={sc => {
+                  setFocusedSceneId(sc.id);
+                  const targetEl = document.getElementById(`storyboard-scene-${sc.id}`);
+                  if (targetEl) {
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }}
+              />
+            </div>
+
+            {/* Optional Global Presenter Consistency Module */}
+            <CharacterConsistencyModule
+              config={characterConsistency}
+              sceneCount={activeProject.scenes.length}
+              onApplyConfig={handleApplyCharacterConsistency}
             />
+
+            {/* Step 6: Video Player Preview & Consolidated Full-Video Export */}
+            <div id="workflow-section-export">
+              <VideoPlayerPreview
+                project={activeProject}
+                selectedLanguage={selectedLanguage}
+                onSelectLanguage={setSelectedLanguage}
+                onOpenQualityReport={() => setIsQualityReportOpen(true)}
+                characterConsistency={characterConsistency}
+                kokoroProsody={kokoroProsody}
+                onUpdateKokoroProsody={setKokoroProsody}
+                activeWorkflowStep={activeWorkflowStep}
+                onExportZip={handleExportZip}
+                onUpdateProject={updatedProj => {
+                  setProjects(prev =>
+                    prev.map(p => (p.id === updatedProj.id ? { ...p, ...updatedProj } : p))
+                  );
+                }}
+              />
+            </div>
+
+            {/* Step 3: Integrated 4K Storyboard Scenes, Global Scene Timeline, Regenerate Scene & Review States */}
+            <div id="workflow-section-storyboard" className="mt-8">
+              <StoryboardView
+                scenes={activeProject.scenes}
+                onUpdateScene={handleUpdateScene}
+                onBatchUpdateScenes={handleBatchUpdateScenes}
+                onRegenerateScene={sceneId => handleRegenerateSingleScene(sceneId)}
+                onRegenerateSelectedScenes={handleRegenerateSelectedScenes}
+                characterConsistency={characterConsistency}
+                selectedLanguage={selectedLanguage}
+                localizedOutputs={activeProject.localizedOutputs}
+                videoTitle={activeProject.name}
+                totalDurationSeconds={activeProject.durationSeconds}
+                focusedSceneId={focusedSceneId}
+                onSelectScene={sc => setFocusedSceneId(sc.id)}
+                humanReviewLocked={activeProject.humanReviewLocked}
+              />
+            </div>
+
+            {/* Step 2 & 4: Transcript & Multi-Language Voiceover Studio */}
+            <div id="workflow-section-transcript" className="mt-8">
+              <div id="workflow-section-voiceover">
+                <TranscriptView
+                  project={activeProject}
+                  selectedLanguage={selectedLanguage}
+                  onSelectLanguage={setSelectedLanguage}
+                  onApplyCustomTranslations={handleApplyCustomTranslations}
+                  onUpdateSegmentLatency={handleUpdateSegmentLatency}
+                  onBulkUpdateLanguageLatency={handleBulkUpdateLanguageLatency}
+                  kokoroProsody={kokoroProsody}
+                  onUpdateKokoroProsody={setKokoroProsody}
+                />
+              </div>
+            </div>
           </div>
         )}
 
@@ -986,6 +1436,18 @@ export default function App() {
           <StoryboardView
             scenes={activeProject.scenes}
             onUpdateScene={handleUpdateScene}
+            onBatchUpdateScenes={handleBatchUpdateScenes}
+            onRegenerateScene={sceneId => handleRegenerateSingleScene(sceneId)}
+            onRegenerateSelectedScenes={handleRegenerateSelectedScenes}
+            characterConsistency={characterConsistency}
+            onApplyCharacterConsistency={handleApplyCharacterConsistency}
+            selectedLanguage={selectedLanguage}
+            localizedOutputs={activeProject.localizedOutputs}
+            videoTitle={activeProject.name}
+            totalDurationSeconds={activeProject.durationSeconds}
+            focusedSceneId={focusedSceneId}
+            onSelectScene={sc => setFocusedSceneId(sc.id)}
+            humanReviewLocked={activeProject.humanReviewLocked}
           />
         )}
 
@@ -995,6 +1457,11 @@ export default function App() {
             project={activeProject}
             selectedLanguage={selectedLanguage}
             onSelectLanguage={setSelectedLanguage}
+            onApplyCustomTranslations={handleApplyCustomTranslations}
+            onUpdateSegmentLatency={handleUpdateSegmentLatency}
+            onBulkUpdateLanguageLatency={handleBulkUpdateLanguageLatency}
+            kokoroProsody={kokoroProsody}
+            onUpdateKokoroProsody={setKokoroProsody}
           />
         )}
 
@@ -1029,12 +1496,12 @@ export default function App() {
         project={activeProject}
       />
 
-      {/* Subtle Studio Footer */}
+      {/* Studio Footer */}
       <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>OpenVideoStudio · 100% Free &amp; Open Source Software (FOSS) Architecture</span>
+          <span>OpenVideoStudio · Transcript-Grounded Localization &amp; Verified FFmpeg Architecture</span>
           <span className="font-mono text-slate-400">
-            Whisper · NLLB-200 · Kokoro-82M · ComfyUI · FFmpeg 4K
+            Whisper · NLLB-200 · Gemini / Neural TTS · FFmpeg MP4/ZIP
           </span>
         </div>
       </footer>

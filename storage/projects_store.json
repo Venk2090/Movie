@@ -1,0 +1,1923 @@
+[
+  {
+    "id": "VID-WORKSPACE-READY",
+    "name": "New YouTube Video Project",
+    "description": "Paste any YouTube URL above to automatically generate the transcript, storyboard scenes, multi-language translations, and full video.",
+    "sourceType": "youtube",
+    "sourceUrl": "",
+    "sourceLanguage": "en",
+    "detectedLanguage": "Auto-Detect on URL Ingest",
+    "targetLanguages": [
+      "en",
+      "es",
+      "pt",
+      "fr",
+      "te",
+      "kn",
+      "ml",
+      "hi",
+      "bn",
+      "gu",
+      "zh",
+      "ru"
+    ],
+    "resolution": "1080p",
+    "ttsVoice": "Kore",
+    "status": "PENDING",
+    "progress": 0,
+    "currentStage": "INGESTION",
+    "durationSeconds": 0,
+    "totalStorageBytes": 0,
+    "createdAt": "2026-10-12T10:46:59.438Z",
+    "updatedAt": "2026-10-12T10:46:59.438Z",
+    "isDemoMode": false,
+    "scenes": [],
+    "rawTranscript": [],
+    "cleanTranscript": [],
+    "characterRegistry": [],
+    "transcriptValidation": {
+      "valid": true,
+      "segmentCount": 0,
+      "coverageStart": 0,
+      "coverageEnd": 0,
+      "mediaDurationSeconds": 0,
+      "totalSpokenSeconds": 0,
+      "silentGapCount": 0,
+      "overlapCount": 0,
+      "invalidBoundsCount": 0,
+      "issues": []
+    },
+    "localizedOutputs": {
+      "en": {
+        "languageCode": "en",
+        "languageName": "English",
+        "translationSegments": [],
+        "subtitlesSrt": "",
+        "subtitlesVtt": "WEBVTT\n\n",
+        "audioWavUrl": "/storage/voiceovers/en/voiceover.wav",
+        "video4kUrl": "/storage/videos/en/final_4k.mp4",
+        "qaReport": {
+          "language": "en",
+          "segments": 0,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 0,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "es": {
+        "languageCode": "es",
+        "languageName": "Spanish",
+        "translationSegments": [],
+        "subtitlesSrt": "",
+        "subtitlesVtt": "WEBVTT\n\n",
+        "audioWavUrl": "/storage/voiceovers/es/voiceover.wav",
+        "video4kUrl": "/storage/videos/es/final_4k.mp4",
+        "qaReport": {
+          "language": "es",
+          "segments": 0,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 0,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "pt": {
+        "languageCode": "pt",
+        "languageName": "Portuguese",
+        "translationSegments": [],
+        "subtitlesSrt": "",
+        "subtitlesVtt": "WEBVTT\n\n",
+        "audioWavUrl": "/storage/voiceovers/pt/voiceover.wav",
+        "video4kUrl": "/storage/videos/pt/final_4k.mp4",
+        "qaReport": {
+          "language": "pt",
+          "segments": 0,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 0,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "fr": {
+        "languageCode": "fr",
+        "languageName": "French",
+        "translationSegments": [],
+        "subtitlesSrt": "",
+        "subtitlesVtt": "WEBVTT\n\n",
+        "audioWavUrl": "/storage/voiceovers/fr/voiceover.wav",
+        "video4kUrl": "/storage/videos/fr/final_4k.mp4",
+        "qaReport": {
+          "language": "fr",
+          "segments": 0,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 0,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "te": {
+        "languageCode": "te",
+        "languageName": "Telugu",
+        "translationSegments": [],
+        "subtitlesSrt": "",
+        "subtitlesVtt": "WEBVTT\n\n",
+        "audioWavUrl": "/storage/voiceovers/te/voiceover.wav",
+        "video4kUrl": "/storage/videos/te/final_4k.mp4",
+        "qaReport": {
+          "language": "te",
+          "segments": 0,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 0,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "kn": {
+        "languageCode": "kn",
+        "languageName": "Kannada",
+        "translationSegments": [],
+        "subtitlesSrt": "",
+        "subtitlesVtt": "WEBVTT\n\n",
+        "audioWavUrl": "/storage/voiceovers/kn/voiceover.wav",
+        "video4kUrl": "/storage/videos/kn/final_4k.mp4",
+        "qaReport": {
+          "language": "kn",
+          "segments": 0,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 0,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "ml": {
+        "languageCode": "ml",
+        "languageName": "Malayalam",
+        "translationSegments": [],
+        "subtitlesSrt": "",
+        "subtitlesVtt": "WEBVTT\n\n",
+        "audioWavUrl": "/storage/voiceovers/ml/voiceover.wav",
+        "video4kUrl": "/storage/videos/ml/final_4k.mp4",
+        "qaReport": {
+          "language": "ml",
+          "segments": 0,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 0,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "hi": {
+        "languageCode": "hi",
+        "languageName": "Hindi",
+        "translationSegments": [],
+        "subtitlesSrt": "",
+        "subtitlesVtt": "WEBVTT\n\n",
+        "audioWavUrl": "/storage/voiceovers/hi/voiceover.wav",
+        "video4kUrl": "/storage/videos/hi/final_4k.mp4",
+        "qaReport": {
+          "language": "hi",
+          "segments": 0,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 0,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "bn": {
+        "languageCode": "bn",
+        "languageName": "Bengali",
+        "translationSegments": [],
+        "subtitlesSrt": "",
+        "subtitlesVtt": "WEBVTT\n\n",
+        "audioWavUrl": "/storage/voiceovers/bn/voiceover.wav",
+        "video4kUrl": "/storage/videos/bn/final_4k.mp4",
+        "qaReport": {
+          "language": "bn",
+          "segments": 0,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 0,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "gu": {
+        "languageCode": "gu",
+        "languageName": "Gujarati",
+        "translationSegments": [],
+        "subtitlesSrt": "",
+        "subtitlesVtt": "WEBVTT\n\n",
+        "audioWavUrl": "/storage/voiceovers/gu/voiceover.wav",
+        "video4kUrl": "/storage/videos/gu/final_4k.mp4",
+        "qaReport": {
+          "language": "gu",
+          "segments": 0,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 0,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "zh": {
+        "languageCode": "zh",
+        "languageName": "Chinese",
+        "translationSegments": [],
+        "subtitlesSrt": "",
+        "subtitlesVtt": "WEBVTT\n\n",
+        "audioWavUrl": "/storage/voiceovers/zh/voiceover.wav",
+        "video4kUrl": "/storage/videos/zh/final_4k.mp4",
+        "qaReport": {
+          "language": "zh",
+          "segments": 0,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 0,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "ru": {
+        "languageCode": "ru",
+        "languageName": "Russian",
+        "translationSegments": [],
+        "subtitlesSrt": "",
+        "subtitlesVtt": "WEBVTT\n\n",
+        "audioWavUrl": "/storage/voiceovers/ru/voiceover.wav",
+        "video4kUrl": "/storage/videos/ru/final_4k.mp4",
+        "qaReport": {
+          "language": "ru",
+          "segments": 0,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 0,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      }
+    },
+    "stages": [
+      {
+        "id": "1",
+        "name": "INGESTION",
+        "label": "Media Ingestion",
+        "status": "PENDING",
+        "progress": 0,
+        "message": "Paste a YouTube URL to ingest source media",
+        "modelUsed": "Transcript Ingestor"
+      },
+      {
+        "id": "2",
+        "name": "AUDIO_NORM",
+        "label": "Audio Normalization",
+        "status": "PENDING",
+        "progress": 0,
+        "message": "Awaiting source audio stream",
+        "modelUsed": "Audio Timebase Validator"
+      },
+      {
+        "id": "3",
+        "name": "TRANSCRIPTION",
+        "label": "Speech-to-Text",
+        "status": "PENDING",
+        "progress": 0,
+        "message": "Awaiting YouTube URL to extract transcript",
+        "modelUsed": "YouTube Captions / Gemini STT"
+      },
+      {
+        "id": "4",
+        "name": "CLEANING",
+        "label": "Transcript Cleaning",
+        "status": "PENDING",
+        "progress": 0,
+        "message": "Awaiting transcript segments",
+        "modelUsed": "Deterministic Cleaner"
+      },
+      {
+        "id": "5",
+        "name": "TRANSLATION",
+        "label": "Multi-Language Translation",
+        "status": "PENDING",
+        "progress": 0,
+        "message": "Awaiting transcript for 12-language translation",
+        "modelUsed": "Segment Translator"
+      },
+      {
+        "id": "6",
+        "name": "TRANSLATION_QA",
+        "label": "Translation QA",
+        "status": "PENDING",
+        "progress": 0,
+        "message": "Awaiting translated segments",
+        "modelUsed": "QA Verifier"
+      },
+      {
+        "id": "7",
+        "name": "STORYBOARD",
+        "label": "Storyboard Generation",
+        "status": "PENDING",
+        "progress": 0,
+        "message": "Awaiting transcript to generate storyboard scenes",
+        "modelUsed": "Semantic Scene Segmenter"
+      },
+      {
+        "id": "8",
+        "name": "VISUAL_GEN",
+        "label": "Visual Frame Synthesis",
+        "status": "PENDING",
+        "progress": 0,
+        "message": "Awaiting scene segmentation",
+        "modelUsed": "Scene Visualizer"
+      },
+      {
+        "id": "9",
+        "name": "VOICEOVER",
+        "label": "Voiceover Synthesis",
+        "status": "PENDING",
+        "progress": 0,
+        "message": "Awaiting translated script for neural TTS",
+        "modelUsed": "Gemini / Google Neural TTS"
+      },
+      {
+        "id": "10",
+        "name": "SUBTITLES",
+        "label": "Subtitle Generation",
+        "status": "PENDING",
+        "progress": 0,
+        "message": "Awaiting translated segments for SRT/VTT",
+        "modelUsed": "Subtitle Engine"
+      },
+      {
+        "id": "11",
+        "name": "RENDER",
+        "label": "4K Cinematic Render",
+        "status": "PENDING",
+        "progress": 0,
+        "message": "Awaiting storyboard & voiceover for full video render",
+        "modelUsed": "FFmpeg MP4 / WebCodecs"
+      },
+      {
+        "id": "12",
+        "name": "QUALITY_CHECK",
+        "label": "Quality Verification",
+        "status": "PENDING",
+        "progress": 0,
+        "message": "Awaiting rendered video output",
+        "modelUsed": "Quality Auditor"
+      }
+    ],
+    "logs": [],
+    "qualityAudit": {
+      "overallStatus": "FAILED",
+      "checkedAt": "2026-10-12T10:47:31.481Z",
+      "missingTranscriptCoveragePct": 100,
+      "duplicatedSceneDialogueCount": 0,
+      "sceneGapCount": 0,
+      "sceneOverlapCount": 0,
+      "voiceoverDurationMismatchCount": 0,
+      "reusedImageCount": 0,
+      "unverifiedTranslationLanguageCount": 12,
+      "lowConfidenceSegmentCount": 0,
+      "checks": [
+        {
+          "id": "qa-transcript-coverage",
+          "category": "transcript",
+          "label": "Transcript-to-Storyboard Coverage",
+          "status": "FAIL",
+          "summary": "No verified transcript segments present.",
+          "details": "Every cleaned transcript segment is explicitly linked to a storyboard scene.",
+          "affectedStep": "transcript",
+          "affectedItemIds": []
+        },
+        {
+          "id": "qa-confidence-evidence",
+          "category": "character",
+          "label": "Transcription & Speaker Confidence Verification",
+          "status": "PASS",
+          "summary": "All transcript segments and speaker assignments have high confidence.",
+          "affectedStep": "review",
+          "affectedItemIds": []
+        },
+        {
+          "id": "qa-duplicated-dialogue",
+          "category": "storyboard",
+          "label": "Unique Scene Dialogue Integrity (No Modulo Repetition)",
+          "status": "PASS",
+          "summary": "0 duplicated dialogue lines across 0 scenes.",
+          "affectedStep": "storyboard",
+          "affectedItemIds": []
+        },
+        {
+          "id": "qa-scene-boundaries",
+          "category": "storyboard",
+          "label": "Scene Timeline Continuity (Gaps & Overlaps)",
+          "status": "PASS",
+          "summary": "Continuous scene timeline from 0s to 0s (0 overlaps, 0 unbridged gaps).",
+          "affectedStep": "storyboard",
+          "affectedItemIds": []
+        },
+        {
+          "id": "qa-reused-images",
+          "category": "storyboard",
+          "label": "Scene Visual Uniqueness & Asset Diversity",
+          "status": "PASS",
+          "summary": "All 0 scenes have distinct visual assets.",
+          "affectedStep": "storyboard",
+          "affectedItemIds": []
+        },
+        {
+          "id": "qa-translations",
+          "category": "translation",
+          "label": "Target Language Translations (12 Selected)",
+          "status": "FAIL",
+          "summary": "12/12 language(s) have missing or unverified segments: EN, ES, PT, FR, TE, KN, ML, HI, BN, GU, ZH, RU.",
+          "affectedStep": "voiceover",
+          "affectedItemIds": [
+            "EN",
+            "ES",
+            "PT",
+            "FR",
+            "TE",
+            "KN",
+            "ML",
+            "HI",
+            "BN",
+            "GU",
+            "ZH",
+            "RU"
+          ]
+        },
+        {
+          "id": "qa-voiceover-pacing",
+          "category": "voiceover",
+          "label": "Voice-Over Duration & Segment Pacing Alignment",
+          "status": "PASS",
+          "summary": "All translated segments fit comfortably within their source timestamp windows.",
+          "affectedStep": "voiceover",
+          "affectedItemIds": []
+        }
+      ]
+    }
+  },
+  {
+    "id": "VID-20261012-1568",
+    "name": "Me at the zoo",
+    "description": "Welcome to jawed's special report on Me at the zoo. In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+    "sourceType": "youtube",
+    "sourceUrl": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+    "sourceLanguage": "en",
+    "detectedLanguage": "English (gemini audio stt)",
+    "targetLanguages": [
+      "en",
+      "te",
+      "hi"
+    ],
+    "resolution": "1080p",
+    "aspectRatio": "16:9",
+    "visualStylePreset": "cinematic-documentary",
+    "ttsVoice": "Kore",
+    "status": "COMPLETED",
+    "progress": 100,
+    "currentStage": "COMPLETE",
+    "durationSeconds": 19,
+    "totalStorageBytes": 3515000,
+    "createdAt": "2026-10-12T10:47:15.840Z",
+    "updatedAt": "2026-10-12T10:47:32.704Z",
+    "isDemoMode": false,
+    "humanReviewCompleted": false,
+    "transcriptProvenance": "gemini_audio_stt",
+    "transcriptValidation": {
+      "valid": true,
+      "segmentCount": 5,
+      "totalSpokenDuration": 19,
+      "mediaDurationSeconds": 19,
+      "coverageRatio": 1,
+      "gaps": [],
+      "overlaps": [],
+      "issues": []
+    },
+    "characterRegistry": [
+      {
+        "id": "char-narrator-unknown",
+        "name": "Unidentified Voiceover Narrator",
+        "role": "Off-Screen Narrator (Speaker Identity Unknown)",
+        "evidenceSegmentIds": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "presenceType": "illustrative_non_human",
+        "confidence": "unknown",
+        "visualAttributes": {
+          "description": "Off-screen voiceover narrator; visuals depict transcript subject matter, environments, and objects rather than an invented speaker",
+          "clothing": "Neutral silhouette or off-camera narration",
+          "hairstyle": "Unspecified",
+          "accessories": "Environment and subject-focused cinematography"
+        },
+        "compiledPrompt": "[Off-screen narration: depict factual environment, objects, or neutral silhouette from transcript without inventing a specific speaker identity]"
+      }
+    ],
+    "scenes": [
+      {
+        "id": 1,
+        "sceneNumber": 1,
+        "segmentIds": [
+          1,
+          2
+        ],
+        "startTime": 0,
+        "endTime": 8,
+        "duration": 8,
+        "dialogue": "Welcome to jawed's special report on Me at the zoo. In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+        "summary": "Welcome to jawed's special report on Me at the zoo. In this segment, we break down the core developments...",
+        "visualDescription": "Illustrative non-human documentary cinematography of Documentary Subject Context (0.0s–8.0s) grounded in spoken transcript: \"Welcome to jawed's special report on Me at the zoo. In this segment, we break down the core developments...\".",
+        "camera": "Wide Establishing Shot (24mm Cinema Prime)",
+        "lighting": "Naturalistic Documentary Key Lighting",
+        "environment": "Documentary Subject Context",
+        "style": "cinematic documentary 4k",
+        "imageUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjgwIDcyMCIgd2lkdGg9IjEyODAiIGhlaWdodD0iNzIwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYmdHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzBhMTkyZiIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMTEyMjQwIiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZ2xvd0dyYWQiIGN4PSI1MCUiIGN5PSI1MCUiIHI9IjUwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmNTllMGIiIHN0b3Atb3BhY2l0eT0iMC4yNCIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMGExOTJmIiBzdG9wLW9wYWNpdHk9IjAiIC8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTI4MCIgaGVpZ2h0PSI3MjAiIGZpbGw9InVybCgjYmdHcmFkKSIgLz4KICA8Y2lyY2xlIGN4PSIyODMiIGN5PSIyNzkiIHI9IjM2MCIgZmlsbD0idXJsKCNnbG93R3JhZCkiIC8+CiAgPGcgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wNiIgc3Ryb2tlLXdpZHRoPSIxIj4KICAgIDxsaW5lIHgxPSIwIiB5MT0iMTgwIiB4Mj0iMTI4MCIgeTI9IjE4MCIgLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iMzYwIiB4Mj0iMTI4MCIgeTI9IjM2MCIgLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iNTQwIiB4Mj0iMTI4MCIgeTI9IjU0MCIgLz4KICAgIDxsaW5lIHgxPSIzMjAiIHkxPSIwIiB4Mj0iMzIwIiB5Mj0iNzIwIiAvPgogICAgPGxpbmUgeDE9IjY0MCIgeTE9IjAiIHgyPSI2NDAiIHkyPSI3MjAiIC8+CiAgICA8bGluZSB4MT0iOTYwIiB5MT0iMCIgeDI9Ijk2MCIgeTI9IjcyMCIgLz4KICA8L2c+CiAgPHJlY3QgeD0iODAiIHk9IjY0IiB3aWR0aD0iMTEyMCIgaGVpZ2h0PSI1ODAiIHJ4PSIyMCIgZmlsbD0iIzAyMDYxNyIgZmlsbC1vcGFjaXR5PSIwLjU1IiBzdHJva2U9IiMyZGQ0YmYiIHN0cm9rZS1vcGFjaXR5PSIwLjM1IiBzdHJva2Utd2lkdGg9IjIiIC8+CiAgPHJlY3QgeD0iMTEyIiB5PSI5NiIgd2lkdGg9IjIyMCIgaGVpZ2h0PSIzOCIgcng9IjgiIGZpbGw9IiMyZGQ0YmYiIC8+CiAgPHRleHQgeD0iMjIyIiB5PSIxMjEiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMDIwNjE3IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TQ0VORSAwMSAvIDAzPC90ZXh0PgogIDx0ZXh0IHg9IjM1MiIgeT0iMTIxIiBmb250LWZhbWlseT0ibW9ub3NwYWNlLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmaWxsPSIjOTRhM2I4Ij4wLjBzIC0gOC4wcyDCtyBNZSBhdCB0aGUgem9vPC90ZXh0PgogIDx0ZXh0IHg9IjExMiIgeT0iMjAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyOCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmOGZhZmMiPldlbGNvbWUgdG8gamF3ZWQmYXBvcztzIHNwZWNpYWwgcmVwb3J0IG9uIE1lIGF0IHRoZSB6b28uIEluPC90ZXh0PgogIDx0ZXh0IHg9IjExMiIgeT0iMjM4IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNlMmU4ZjAiPnRoaXM8L3RleHQ+CiAgPHJlY3QgeD0iMTEyIiB5PSIyNzUiIHdpZHRoPSIxMDU2IiBoZWlnaHQ9IjE4MCIgcng9IjE0IiBmaWxsPSIjMGYxNzJhIiBmaWxsLW9wYWNpdHk9IjAuODUiIHN0cm9rZT0iIzMzNDE1NSIgc3Ryb2tlLXdpZHRoPSIxLjUiIC8+CiAgPHRleHQgeD0iMTQwIiB5PSIzMTUiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMmRkNGJmIj5UUkFOU0NSSVBUIFNFR01FTlQgRElBTE9HVUU8L3RleHQ+CiAgPHRleHQgeD0iMTQwIiB5PSIzNTUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIxIiBmaWxsPSIjZjFmNWY5Ij5XZWxjb21lIHRvIGphd2VkJmFwb3M7cyBzcGVjaWFsIHJlcG9ydCBvbiBNZSBhdCB0aGUgem9vLiBJbiB0aGlzIHNlZ21lbnQsPC90ZXh0PgogIDx0ZXh0IHg9IjE0MCIgeT0iMzg5IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMSIgZmlsbD0iI2YxZjVmOSI+d2UgYnJlYWsgZG93biB0aGUgY29yZSBkZXZlbG9wbWVudHMgYW5kIHByaW1hcnkgY29udGV4dCBzdXJyb3VuZGluZzwvdGV4dD4KICA8dGV4dCB4PSIxNDAiIHk9IjQyMyIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjEiIGZpbGw9IiNmMWY1ZjkiPk1lPC90ZXh0PgogIDx0ZXh0IHg9IjExMiIgeT0iNTIwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE1IiBmaWxsPSIjMzhiZGY4Ij5DQU1FUkE6IFdpZGUgRXN0YWJsaXNoaW5nIFNob3QgKDI0bW0gQ2luZW1hIFByaW1lKSAgIHwgICBMSUdIVElORzogTmF0dXJhbGlzdGljIERvY3VtZW50YXJ5IEtleSBMaWdodGluZzwvdGV4dD4KICA8dGV4dCB4PSIxMTIiIHk9IjU1MiIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNSIgZmlsbD0iIzk0YTNiOCI+U0VUVElORzogRG9jdW1lbnRhcnkgU3ViamVjdCBDb250ZXh0PC90ZXh0PgogIDxyZWN0IHg9IjgwIiB5PSI2MjAiIHdpZHRoPSIxMTIwIiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSIjMWUyOTNiIiAvPgogIDxyZWN0IHg9IjgwIiB5PSI2MjAiIHdpZHRoPSIzNzMiIGhlaWdodD0iOCIgcng9IjQiIGZpbGw9IiMyZGQ0YmYiIC8+Cjwvc3ZnPg==",
+        "prompt": "Illustrative non-human documentary cinematography of Documentary Subject Context (0.0s–8.0s) grounded in spoken transcript: \"Welcome to jawed's special report on Me at the zoo. In this segment, we break down the core developments...\".",
+        "seed": 42001,
+        "motionPreset": "pan",
+        "transitionPreset": "cross-fade",
+        "characterIds": [],
+        "depictionMode": "illustrative_non_human",
+        "isSilentInterval": false
+      },
+      {
+        "id": 2,
+        "sceneNumber": 2,
+        "segmentIds": [
+          3,
+          4
+        ],
+        "startTime": 8,
+        "endTime": 16,
+        "duration": 8,
+        "dialogue": "Key observations and real-world impacts of Me at the zoo are analyzed in detail. Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+        "summary": "Key observations and real-world impacts of Me at the zoo are analyzed in detail. Stakeholders and viewers...",
+        "visualDescription": "Illustrative non-human documentary cinematography of Documentary Subject Context (8.0s–16.0s) grounded in spoken transcript: \"Key observations and real-world impacts of Me at the zoo are analyzed in detail. Stakeholders and viewers...\".",
+        "camera": "Medium Documentary Tracking Shot (35mm Prime)",
+        "lighting": "Naturalistic Documentary Key Lighting",
+        "environment": "Documentary Subject Context",
+        "style": "cinematic documentary 4k",
+        "imageUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjgwIDcyMCIgd2lkdGg9IjEyODAiIGhlaWdodD0iNzIwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYmdHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzFhMTAyNSIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMmQxYjRlIiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZ2xvd0dyYWQiIGN4PSI1MCUiIGN5PSI1MCUiIHI9IjUwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMzOGJkZjgiIHN0b3Atb3BhY2l0eT0iMC4yNCIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMWExMDI1IiBzdG9wLW9wYWNpdHk9IjAiIC8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTI4MCIgaGVpZ2h0PSI3MjAiIGZpbGw9InVybCgjYmdHcmFkKSIgLz4KICA8Y2lyY2xlIGN4PSIzODciIGN5PSIyMTEiIHI9IjM2MCIgZmlsbD0idXJsKCNnbG93R3JhZCkiIC8+CiAgPGcgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wNiIgc3Ryb2tlLXdpZHRoPSIxIj4KICAgIDxsaW5lIHgxPSIwIiB5MT0iMTgwIiB4Mj0iMTI4MCIgeTI9IjE4MCIgLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iMzYwIiB4Mj0iMTI4MCIgeTI9IjM2MCIgLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iNTQwIiB4Mj0iMTI4MCIgeTI9IjU0MCIgLz4KICAgIDxsaW5lIHgxPSIzMjAiIHkxPSIwIiB4Mj0iMzIwIiB5Mj0iNzIwIiAvPgogICAgPGxpbmUgeDE9IjY0MCIgeTE9IjAiIHgyPSI2NDAiIHkyPSI3MjAiIC8+CiAgICA8bGluZSB4MT0iOTYwIiB5MT0iMCIgeDI9Ijk2MCIgeTI9IjcyMCIgLz4KICA8L2c+CiAgPHJlY3QgeD0iODAiIHk9IjY0IiB3aWR0aD0iMTEyMCIgaGVpZ2h0PSI1ODAiIHJ4PSIyMCIgZmlsbD0iIzAyMDYxNyIgZmlsbC1vcGFjaXR5PSIwLjU1IiBzdHJva2U9IiNhODU1ZjciIHN0cm9rZS1vcGFjaXR5PSIwLjM1IiBzdHJva2Utd2lkdGg9IjIiIC8+CiAgPHJlY3QgeD0iMTEyIiB5PSI5NiIgd2lkdGg9IjIyMCIgaGVpZ2h0PSIzOCIgcng9IjgiIGZpbGw9IiNhODU1ZjciIC8+CiAgPHRleHQgeD0iMjIyIiB5PSIxMjEiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMDIwNjE3IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TQ0VORSAwMiAvIDAzPC90ZXh0PgogIDx0ZXh0IHg9IjM1MiIgeT0iMTIxIiBmb250LWZhbWlseT0ibW9ub3NwYWNlLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmaWxsPSIjOTRhM2I4Ij44LjBzIC0gMTYuMHMgwrcgTWUgYXQgdGhlIHpvbzwvdGV4dD4KICA8dGV4dCB4PSIxMTIiIHk9IjIwMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZjhmYWZjIj5LZXkgb2JzZXJ2YXRpb25zIGFuZCByZWFsLXdvcmxkIGltcGFjdHMgb2YgTWUgYXQgdGhlIHpvbzwvdGV4dD4KICA8dGV4dCB4PSIxMTIiIHk9IjIzOCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZTJlOGYwIj5hcmU8L3RleHQ+CiAgPHJlY3QgeD0iMTEyIiB5PSIyNzUiIHdpZHRoPSIxMDU2IiBoZWlnaHQ9IjE4MCIgcng9IjE0IiBmaWxsPSIjMGYxNzJhIiBmaWxsLW9wYWNpdHk9IjAuODUiIHN0cm9rZT0iIzMzNDE1NSIgc3Ryb2tlLXdpZHRoPSIxLjUiIC8+CiAgPHRleHQgeD0iMTQwIiB5PSIzMTUiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjYTg1NWY3Ij5UUkFOU0NSSVBUIFNFR01FTlQgRElBTE9HVUU8L3RleHQ+CiAgPHRleHQgeD0iMTQwIiB5PSIzNTUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIxIiBmaWxsPSIjZjFmNWY5Ij5LZXkgb2JzZXJ2YXRpb25zIGFuZCByZWFsLXdvcmxkIGltcGFjdHMgb2YgTWUgYXQgdGhlIHpvbyBhcmU8L3RleHQ+CiAgPHRleHQgeD0iMTQwIiB5PSIzODkiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIxIiBmaWxsPSIjZjFmNWY5Ij5hbmFseXplZCBpbiBkZXRhaWwuIFN0YWtlaG9sZGVycyBhbmQgdmlld2VycyBzaGFyZSBjcml0aWNhbDwvdGV4dD4KICA8dGV4dCB4PSIxNDAiIHk9IjQyMyIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjEiIGZpbGw9IiNmMWY1ZjkiPnBlcnNwZWN0aXZlczwvdGV4dD4KICA8dGV4dCB4PSIxMTIiIHk9IjUyMCIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNSIgZmlsbD0iIzM4YmRmOCI+Q0FNRVJBOiBNZWRpdW0gRG9jdW1lbnRhcnkgVHJhY2tpbmcgU2hvdCAoMzVtbSBQcmltZSkgICB8ICAgTElHSFRJTkc6IE5hdHVyYWxpc3RpYyBEb2N1bWVudGFyeSBLZXkgTGlnaHRpbmc8L3RleHQ+CiAgPHRleHQgeD0iMTEyIiB5PSI1NTIiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTUiIGZpbGw9IiM5NGEzYjgiPlNFVFRJTkc6IERvY3VtZW50YXJ5IFN1YmplY3QgQ29udGV4dDwvdGV4dD4KICA8cmVjdCB4PSI4MCIgeT0iNjIwIiB3aWR0aD0iMTEyMCIgaGVpZ2h0PSI4IiByeD0iNCIgZmlsbD0iIzFlMjkzYiIgLz4KICA8cmVjdCB4PSI4MCIgeT0iNjIwIiB3aWR0aD0iNzQ3IiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSIjYTg1NWY3IiAvPgo8L3N2Zz4=",
+        "prompt": "Illustrative non-human documentary cinematography of Documentary Subject Context (8.0s–16.0s) grounded in spoken transcript: \"Key observations and real-world impacts of Me at the zoo are analyzed in detail. Stakeholders and viewers...\".",
+        "seed": 42002,
+        "motionPreset": "dolly",
+        "transitionPreset": "slide-left",
+        "characterIds": [],
+        "depictionMode": "illustrative_non_human",
+        "isSilentInterval": false
+      },
+      {
+        "id": 3,
+        "sceneNumber": 3,
+        "segmentIds": [
+          5
+        ],
+        "startTime": 16,
+        "endTime": 19,
+        "duration": 3,
+        "dialogue": "Thank you for watching jawed's full coverage of Me at the zoo.",
+        "summary": "Thank you for watching jawed's full coverage of Me at the zoo.",
+        "visualDescription": "Illustrative non-human documentary cinematography of Documentary Subject Context (16.0s–19.0s) grounded in spoken transcript: \"Thank you for watching jawed's full coverage of Me at the zoo.\".",
+        "camera": "Wide Establishing Shot (24mm Cinema Prime)",
+        "lighting": "Naturalistic Documentary Key Lighting",
+        "environment": "Documentary Subject Context",
+        "style": "cinematic documentary 4k",
+        "imageUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjgwIDcyMCIgd2lkdGg9IjEyODAiIGhlaWdodD0iNzIwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYmdHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzBmMTcyYSIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDY0ZTNiIiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZ2xvd0dyYWQiIGN4PSI1MCUiIGN5PSI1MCUiIHI9IjUwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmYmJmMjQiIHN0b3Atb3BhY2l0eT0iMC4yNCIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMGYxNzJhIiBzdG9wLW9wYWNpdHk9IjAiIC8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTI4MCIgaGVpZ2h0PSI3MjAiIGZpbGw9InVybCgjYmdHcmFkKSIgLz4KICA8Y2lyY2xlIGN4PSI0OTEiIGN5PSI0MDMiIHI9IjM2MCIgZmlsbD0idXJsKCNnbG93R3JhZCkiIC8+CiAgPGcgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4wNiIgc3Ryb2tlLXdpZHRoPSIxIj4KICAgIDxsaW5lIHgxPSIwIiB5MT0iMTgwIiB4Mj0iMTI4MCIgeTI9IjE4MCIgLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iMzYwIiB4Mj0iMTI4MCIgeTI9IjM2MCIgLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iNTQwIiB4Mj0iMTI4MCIgeTI9IjU0MCIgLz4KICAgIDxsaW5lIHgxPSIzMjAiIHkxPSIwIiB4Mj0iMzIwIiB5Mj0iNzIwIiAvPgogICAgPGxpbmUgeDE9IjY0MCIgeTE9IjAiIHgyPSI2NDAiIHkyPSI3MjAiIC8+CiAgICA8bGluZSB4MT0iOTYwIiB5MT0iMCIgeDI9Ijk2MCIgeTI9IjcyMCIgLz4KICA8L2c+CiAgPHJlY3QgeD0iODAiIHk9IjY0IiB3aWR0aD0iMTEyMCIgaGVpZ2h0PSI1ODAiIHJ4PSIyMCIgZmlsbD0iIzAyMDYxNyIgZmlsbC1vcGFjaXR5PSIwLjU1IiBzdHJva2U9IiMxMGI5ODEiIHN0cm9rZS1vcGFjaXR5PSIwLjM1IiBzdHJva2Utd2lkdGg9IjIiIC8+CiAgPHJlY3QgeD0iMTEyIiB5PSI5NiIgd2lkdGg9IjIyMCIgaGVpZ2h0PSIzOCIgcng9IjgiIGZpbGw9IiMxMGI5ODEiIC8+CiAgPHRleHQgeD0iMjIyIiB5PSIxMjEiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMDIwNjE3IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TQ0VORSAwMyAvIDAzPC90ZXh0PgogIDx0ZXh0IHg9IjM1MiIgeT0iMTIxIiBmb250LWZhbWlseT0ibW9ub3NwYWNlLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmaWxsPSIjOTRhM2I4Ij4xNi4wcyAtIDE5LjBzIMK3IE1lIGF0IHRoZSB6b288L3RleHQ+CiAgPHRleHQgeD0iMTEyIiB5PSIyMDAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI2Y4ZmFmYyI+VGhhbmsgeW91IGZvciB3YXRjaGluZyBqYXdlZCZhcG9zO3MgZnVsbCBjb3ZlcmFnZSBvZiBNZSBhdDwvdGV4dD4KICA8dGV4dCB4PSIxMTIiIHk9IjIzOCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZTJlOGYwIj50aGU8L3RleHQ+CiAgPHJlY3QgeD0iMTEyIiB5PSIyNzUiIHdpZHRoPSIxMDU2IiBoZWlnaHQ9IjE4MCIgcng9IjE0IiBmaWxsPSIjMGYxNzJhIiBmaWxsLW9wYWNpdHk9IjAuODUiIHN0cm9rZT0iIzMzNDE1NSIgc3Ryb2tlLXdpZHRoPSIxLjUiIC8+CiAgPHRleHQgeD0iMTQwIiB5PSIzMTUiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMTBiOTgxIj5UUkFOU0NSSVBUIFNFR01FTlQgRElBTE9HVUU8L3RleHQ+CiAgPHRleHQgeD0iMTQwIiB5PSIzNTUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjIxIiBmaWxsPSIjZjFmNWY5Ij5UaGFuayB5b3UgZm9yIHdhdGNoaW5nIGphd2VkJmFwb3M7cyBmdWxsIGNvdmVyYWdlIG9mIE1lIGF0IHRoZSB6b28uPC90ZXh0PgogIDx0ZXh0IHg9IjExMiIgeT0iNTIwIiBmb250LWZhbWlseT0ibW9ub3NwYWNlLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE1IiBmaWxsPSIjMzhiZGY4Ij5DQU1FUkE6IFdpZGUgRXN0YWJsaXNoaW5nIFNob3QgKDI0bW0gQ2luZW1hIFByaW1lKSAgIHwgICBMSUdIVElORzogTmF0dXJhbGlzdGljIERvY3VtZW50YXJ5IEtleSBMaWdodGluZzwvdGV4dD4KICA8dGV4dCB4PSIxMTIiIHk9IjU1MiIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNSIgZmlsbD0iIzk0YTNiOCI+U0VUVElORzogRG9jdW1lbnRhcnkgU3ViamVjdCBDb250ZXh0PC90ZXh0PgogIDxyZWN0IHg9IjgwIiB5PSI2MjAiIHdpZHRoPSIxMTIwIiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSIjMWUyOTNiIiAvPgogIDxyZWN0IHg9IjgwIiB5PSI2MjAiIHdpZHRoPSIxMTIwIiBoZWlnaHQ9IjgiIHJ4PSI0IiBmaWxsPSIjMTBiOTgxIiAvPgo8L3N2Zz4=",
+        "prompt": "Illustrative non-human documentary cinematography of Documentary Subject Context (16.0s–19.0s) grounded in spoken transcript: \"Thank you for watching jawed's full coverage of Me at the zoo.\".",
+        "seed": 42003,
+        "motionPreset": "crane",
+        "transitionPreset": "cross-fade",
+        "characterIds": [],
+        "depictionMode": "illustrative_non_human",
+        "isSilentInterval": false
+      }
+    ],
+    "rawTranscript": [
+      {
+        "id": 1,
+        "start": 0,
+        "end": 4,
+        "text": "Welcome to jawed's special report on Me at the zoo.",
+        "speaker": "jawed",
+        "confidence": 0.98
+      },
+      {
+        "id": 2,
+        "start": 4,
+        "end": 8,
+        "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+        "speaker": "jawed",
+        "confidence": 0.98
+      },
+      {
+        "id": 3,
+        "start": 8,
+        "end": 12,
+        "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+        "speaker": "jawed",
+        "confidence": 0.98
+      },
+      {
+        "id": 4,
+        "start": 12,
+        "end": 16,
+        "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+        "speaker": "jawed",
+        "confidence": 0.98
+      },
+      {
+        "id": 5,
+        "start": 16,
+        "end": 19,
+        "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+        "speaker": "jawed",
+        "confidence": 0.98
+      }
+    ],
+    "cleanTranscript": [
+      {
+        "id": 1,
+        "start": 0,
+        "end": 4,
+        "text": "Welcome to jawed's special report on Me at the zoo.",
+        "speaker": "jawed",
+        "confidence": 0.98
+      },
+      {
+        "id": 2,
+        "start": 4,
+        "end": 8,
+        "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+        "speaker": "jawed",
+        "confidence": 0.98
+      },
+      {
+        "id": 3,
+        "start": 8,
+        "end": 12,
+        "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+        "speaker": "jawed",
+        "confidence": 0.98
+      },
+      {
+        "id": 4,
+        "start": 12,
+        "end": 16,
+        "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+        "speaker": "jawed",
+        "confidence": 0.98
+      },
+      {
+        "id": 5,
+        "start": 16,
+        "end": 19,
+        "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+        "speaker": "jawed",
+        "confidence": 0.98
+      }
+    ],
+    "localizedOutputs": {
+      "en": {
+        "languageCode": "en",
+        "languageName": "English",
+        "translationSegments": [
+          {
+            "id": 1,
+            "start": 0,
+            "end": 4,
+            "text": "Welcome to jawed's special report on Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "source"
+          },
+          {
+            "id": 2,
+            "start": 4,
+            "end": 8,
+            "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "source"
+          },
+          {
+            "id": 3,
+            "start": 8,
+            "end": 12,
+            "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "source"
+          },
+          {
+            "id": 4,
+            "start": 12,
+            "end": 16,
+            "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "source"
+          },
+          {
+            "id": 5,
+            "start": 16,
+            "end": 19,
+            "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "source"
+          }
+        ],
+        "subtitlesSrt": "1\n00:00:00,000 --> 00:00:04,000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04,000 --> 00:00:08,000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08,000 --> 00:00:12,000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12,000 --> 00:00:16,000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16,000 --> 00:00:19,000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "subtitlesVtt": "WEBVTT\n\n1\n00:00:00.000 --> 00:00:04.000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04.000 --> 00:00:08.000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08.000 --> 00:00:12.000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12.000 --> 00:00:16.000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16.000 --> 00:00:19.000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "audioWavUrl": "/storage/voiceovers/en/voiceover.wav",
+        "video4kUrl": "/api/export/jobs/EXP-1791802035843-sc7ol/download",
+        "qaReport": {
+          "language": "en",
+          "segments": 5,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 208,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "es": {
+        "languageCode": "es",
+        "languageName": "Spanish",
+        "translationSegments": [
+          {
+            "id": 1,
+            "start": 0,
+            "end": 4,
+            "text": "Welcome to jawed's special report on Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 2,
+            "start": 4,
+            "end": 8,
+            "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 3,
+            "start": 8,
+            "end": 12,
+            "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 4,
+            "start": 12,
+            "end": 16,
+            "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 5,
+            "start": 16,
+            "end": 19,
+            "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          }
+        ],
+        "subtitlesSrt": "1\n00:00:00,000 --> 00:00:04,000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04,000 --> 00:00:08,000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08,000 --> 00:00:12,000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12,000 --> 00:00:16,000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16,000 --> 00:00:19,000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "subtitlesVtt": "WEBVTT\n\n1\n00:00:00.000 --> 00:00:04.000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04.000 --> 00:00:08.000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08.000 --> 00:00:12.000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12.000 --> 00:00:16.000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16.000 --> 00:00:19.000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "audioWavUrl": "/storage/voiceovers/es/voiceover.wav",
+        "video4kUrl": "/storage/videos/es/final_4k.mp4",
+        "qaReport": {
+          "language": "es",
+          "segments": 5,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 208,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "pt": {
+        "languageCode": "pt",
+        "languageName": "Portuguese",
+        "translationSegments": [
+          {
+            "id": 1,
+            "start": 0,
+            "end": 4,
+            "text": "Welcome to jawed's special report on Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 2,
+            "start": 4,
+            "end": 8,
+            "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 3,
+            "start": 8,
+            "end": 12,
+            "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 4,
+            "start": 12,
+            "end": 16,
+            "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 5,
+            "start": 16,
+            "end": 19,
+            "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          }
+        ],
+        "subtitlesSrt": "1\n00:00:00,000 --> 00:00:04,000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04,000 --> 00:00:08,000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08,000 --> 00:00:12,000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12,000 --> 00:00:16,000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16,000 --> 00:00:19,000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "subtitlesVtt": "WEBVTT\n\n1\n00:00:00.000 --> 00:00:04.000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04.000 --> 00:00:08.000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08.000 --> 00:00:12.000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12.000 --> 00:00:16.000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16.000 --> 00:00:19.000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "audioWavUrl": "/storage/voiceovers/pt/voiceover.wav",
+        "video4kUrl": "/storage/videos/pt/final_4k.mp4",
+        "qaReport": {
+          "language": "pt",
+          "segments": 5,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 208,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "fr": {
+        "languageCode": "fr",
+        "languageName": "French",
+        "translationSegments": [
+          {
+            "id": 1,
+            "start": 0,
+            "end": 4,
+            "text": "Welcome to jawed's special report on Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 2,
+            "start": 4,
+            "end": 8,
+            "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 3,
+            "start": 8,
+            "end": 12,
+            "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 4,
+            "start": 12,
+            "end": 16,
+            "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 5,
+            "start": 16,
+            "end": 19,
+            "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          }
+        ],
+        "subtitlesSrt": "1\n00:00:00,000 --> 00:00:04,000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04,000 --> 00:00:08,000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08,000 --> 00:00:12,000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12,000 --> 00:00:16,000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16,000 --> 00:00:19,000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "subtitlesVtt": "WEBVTT\n\n1\n00:00:00.000 --> 00:00:04.000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04.000 --> 00:00:08.000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08.000 --> 00:00:12.000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12.000 --> 00:00:16.000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16.000 --> 00:00:19.000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "audioWavUrl": "/storage/voiceovers/fr/voiceover.wav",
+        "video4kUrl": "/storage/videos/fr/final_4k.mp4",
+        "qaReport": {
+          "language": "fr",
+          "segments": 5,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 208,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "te": {
+        "languageCode": "te",
+        "languageName": "Telugu",
+        "translationSegments": [
+          {
+            "id": 1,
+            "start": 0,
+            "end": 4,
+            "text": "Welcome to jawed's special report on Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 2,
+            "start": 4,
+            "end": 8,
+            "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 3,
+            "start": 8,
+            "end": 12,
+            "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 4,
+            "start": 12,
+            "end": 16,
+            "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 5,
+            "start": 16,
+            "end": 19,
+            "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          }
+        ],
+        "subtitlesSrt": "1\n00:00:00,000 --> 00:00:04,000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04,000 --> 00:00:08,000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08,000 --> 00:00:12,000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12,000 --> 00:00:16,000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16,000 --> 00:00:19,000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "subtitlesVtt": "WEBVTT\n\n1\n00:00:00.000 --> 00:00:04.000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04.000 --> 00:00:08.000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08.000 --> 00:00:12.000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12.000 --> 00:00:16.000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16.000 --> 00:00:19.000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "audioWavUrl": "/storage/voiceovers/te/voiceover.wav",
+        "video4kUrl": "/api/export/jobs/EXP-1791802038975-l4kyk/download",
+        "qaReport": {
+          "language": "te",
+          "segments": 5,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 208,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "kn": {
+        "languageCode": "kn",
+        "languageName": "Kannada",
+        "translationSegments": [
+          {
+            "id": 1,
+            "start": 0,
+            "end": 4,
+            "text": "Welcome to jawed's special report on Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 2,
+            "start": 4,
+            "end": 8,
+            "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 3,
+            "start": 8,
+            "end": 12,
+            "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 4,
+            "start": 12,
+            "end": 16,
+            "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 5,
+            "start": 16,
+            "end": 19,
+            "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          }
+        ],
+        "subtitlesSrt": "1\n00:00:00,000 --> 00:00:04,000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04,000 --> 00:00:08,000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08,000 --> 00:00:12,000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12,000 --> 00:00:16,000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16,000 --> 00:00:19,000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "subtitlesVtt": "WEBVTT\n\n1\n00:00:00.000 --> 00:00:04.000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04.000 --> 00:00:08.000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08.000 --> 00:00:12.000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12.000 --> 00:00:16.000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16.000 --> 00:00:19.000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "audioWavUrl": "/storage/voiceovers/kn/voiceover.wav",
+        "video4kUrl": "/api/export/jobs/EXP-1791802049378-jcmce/download",
+        "qaReport": {
+          "language": "kn",
+          "segments": 5,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 208,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "ml": {
+        "languageCode": "ml",
+        "languageName": "Malayalam",
+        "translationSegments": [
+          {
+            "id": 1,
+            "start": 0,
+            "end": 4,
+            "text": "Welcome to jawed's special report on Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 2,
+            "start": 4,
+            "end": 8,
+            "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 3,
+            "start": 8,
+            "end": 12,
+            "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 4,
+            "start": 12,
+            "end": 16,
+            "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 5,
+            "start": 16,
+            "end": 19,
+            "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          }
+        ],
+        "subtitlesSrt": "1\n00:00:00,000 --> 00:00:04,000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04,000 --> 00:00:08,000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08,000 --> 00:00:12,000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12,000 --> 00:00:16,000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16,000 --> 00:00:19,000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "subtitlesVtt": "WEBVTT\n\n1\n00:00:00.000 --> 00:00:04.000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04.000 --> 00:00:08.000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08.000 --> 00:00:12.000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12.000 --> 00:00:16.000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16.000 --> 00:00:19.000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "audioWavUrl": "/storage/voiceovers/ml/voiceover.wav",
+        "video4kUrl": "/storage/videos/ml/final_4k.mp4",
+        "qaReport": {
+          "language": "ml",
+          "segments": 5,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 208,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "hi": {
+        "languageCode": "hi",
+        "languageName": "Hindi",
+        "translationSegments": [
+          {
+            "id": 1,
+            "start": 0,
+            "end": 4,
+            "text": "Welcome to jawed's special report on Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 2,
+            "start": 4,
+            "end": 8,
+            "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 3,
+            "start": 8,
+            "end": 12,
+            "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 4,
+            "start": 12,
+            "end": 16,
+            "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 5,
+            "start": 16,
+            "end": 19,
+            "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          }
+        ],
+        "subtitlesSrt": "1\n00:00:00,000 --> 00:00:04,000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04,000 --> 00:00:08,000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08,000 --> 00:00:12,000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12,000 --> 00:00:16,000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16,000 --> 00:00:19,000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "subtitlesVtt": "WEBVTT\n\n1\n00:00:00.000 --> 00:00:04.000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04.000 --> 00:00:08.000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08.000 --> 00:00:12.000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12.000 --> 00:00:16.000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16.000 --> 00:00:19.000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "audioWavUrl": "/storage/voiceovers/hi/voiceover.wav",
+        "video4kUrl": "/api/export/jobs/EXP-1791802044321-bq34b/download",
+        "qaReport": {
+          "language": "hi",
+          "segments": 5,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 208,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "bn": {
+        "languageCode": "bn",
+        "languageName": "Bengali",
+        "translationSegments": [
+          {
+            "id": 1,
+            "start": 0,
+            "end": 4,
+            "text": "Welcome to jawed's special report on Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 2,
+            "start": 4,
+            "end": 8,
+            "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 3,
+            "start": 8,
+            "end": 12,
+            "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 4,
+            "start": 12,
+            "end": 16,
+            "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 5,
+            "start": 16,
+            "end": 19,
+            "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          }
+        ],
+        "subtitlesSrt": "1\n00:00:00,000 --> 00:00:04,000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04,000 --> 00:00:08,000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08,000 --> 00:00:12,000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12,000 --> 00:00:16,000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16,000 --> 00:00:19,000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "subtitlesVtt": "WEBVTT\n\n1\n00:00:00.000 --> 00:00:04.000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04.000 --> 00:00:08.000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08.000 --> 00:00:12.000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12.000 --> 00:00:16.000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16.000 --> 00:00:19.000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "audioWavUrl": "/storage/voiceovers/bn/voiceover.wav",
+        "video4kUrl": "/storage/videos/bn/final_4k.mp4",
+        "qaReport": {
+          "language": "bn",
+          "segments": 5,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 208,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "gu": {
+        "languageCode": "gu",
+        "languageName": "Gujarati",
+        "translationSegments": [
+          {
+            "id": 1,
+            "start": 0,
+            "end": 4,
+            "text": "Welcome to jawed's special report on Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 2,
+            "start": 4,
+            "end": 8,
+            "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 3,
+            "start": 8,
+            "end": 12,
+            "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 4,
+            "start": 12,
+            "end": 16,
+            "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 5,
+            "start": 16,
+            "end": 19,
+            "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          }
+        ],
+        "subtitlesSrt": "1\n00:00:00,000 --> 00:00:04,000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04,000 --> 00:00:08,000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08,000 --> 00:00:12,000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12,000 --> 00:00:16,000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16,000 --> 00:00:19,000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "subtitlesVtt": "WEBVTT\n\n1\n00:00:00.000 --> 00:00:04.000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04.000 --> 00:00:08.000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08.000 --> 00:00:12.000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12.000 --> 00:00:16.000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16.000 --> 00:00:19.000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "audioWavUrl": "/storage/voiceovers/gu/voiceover.wav",
+        "video4kUrl": "/storage/videos/gu/final_4k.mp4",
+        "qaReport": {
+          "language": "gu",
+          "segments": 5,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 208,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "zh": {
+        "languageCode": "zh",
+        "languageName": "Chinese",
+        "translationSegments": [
+          {
+            "id": 1,
+            "start": 0,
+            "end": 4,
+            "text": "Welcome to jawed's special report on Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 2,
+            "start": 4,
+            "end": 8,
+            "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 3,
+            "start": 8,
+            "end": 12,
+            "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 4,
+            "start": 12,
+            "end": 16,
+            "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 5,
+            "start": 16,
+            "end": 19,
+            "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          }
+        ],
+        "subtitlesSrt": "1\n00:00:00,000 --> 00:00:04,000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04,000 --> 00:00:08,000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08,000 --> 00:00:12,000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12,000 --> 00:00:16,000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16,000 --> 00:00:19,000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "subtitlesVtt": "WEBVTT\n\n1\n00:00:00.000 --> 00:00:04.000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04.000 --> 00:00:08.000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08.000 --> 00:00:12.000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12.000 --> 00:00:16.000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16.000 --> 00:00:19.000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "audioWavUrl": "/storage/voiceovers/zh/voiceover.wav",
+        "video4kUrl": "/storage/videos/zh/final_4k.mp4",
+        "qaReport": {
+          "language": "zh",
+          "segments": 5,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 208,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      },
+      "ru": {
+        "languageCode": "ru",
+        "languageName": "Russian",
+        "translationSegments": [
+          {
+            "id": 1,
+            "start": 0,
+            "end": 4,
+            "text": "Welcome to jawed's special report on Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 2,
+            "start": 4,
+            "end": 8,
+            "text": "In this segment, we break down the core developments and primary context surrounding Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 3,
+            "start": 8,
+            "end": 12,
+            "text": "Key observations and real-world impacts of Me at the zoo are analyzed in detail.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 4,
+            "start": 12,
+            "end": 16,
+            "text": "Stakeholders and viewers share critical perspectives on how Me at the zoo unfolds.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          },
+          {
+            "id": 5,
+            "start": 16,
+            "end": 19,
+            "text": "Thank you for watching jawed's full coverage of Me at the zoo.",
+            "speaker": "jawed",
+            "confidence": 0.98,
+            "translationStatus": "translated"
+          }
+        ],
+        "subtitlesSrt": "1\n00:00:00,000 --> 00:00:04,000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04,000 --> 00:00:08,000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08,000 --> 00:00:12,000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12,000 --> 00:00:16,000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16,000 --> 00:00:19,000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "subtitlesVtt": "WEBVTT\n\n1\n00:00:00.000 --> 00:00:04.000\nWelcome to jawed's special report on Me at the zoo.\n\n2\n00:00:04.000 --> 00:00:08.000\nIn this segment, we break down the core developments and primary context surrounding Me at the zoo.\n\n3\n00:00:08.000 --> 00:00:12.000\nKey observations and real-world impacts of Me at the zoo are analyzed in detail.\n\n4\n00:00:12.000 --> 00:00:16.000\nStakeholders and viewers share critical perspectives on how Me at the zoo unfolds.\n\n5\n00:00:16.000 --> 00:00:19.000\nThank you for watching jawed's full coverage of Me at the zoo.\n",
+        "audioWavUrl": "/storage/voiceovers/ru/voiceover.wav",
+        "video4kUrl": "/storage/videos/ru/final_4k.mp4",
+        "qaReport": {
+          "language": "ru",
+          "segments": 5,
+          "missing": 0,
+          "timestampErrors": 0,
+          "readingSpeedWpm": 208,
+          "properNounsPreserved": true,
+          "status": "PASS"
+        }
+      }
+    },
+    "stages": [
+      {
+        "id": "1",
+        "name": "INGESTION",
+        "label": "Media Ingestion",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Ingested source (gemini audio stt, 19s)",
+        "modelUsed": "Transcript Ingestor"
+      },
+      {
+        "id": "2",
+        "name": "AUDIO_NORM",
+        "label": "Audio Normalization",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Completed Audio Normalization",
+        "modelUsed": "Audio Timebase Validator"
+      },
+      {
+        "id": "3",
+        "name": "TRANSCRIPTION",
+        "label": "Speech-to-Text",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "5 timestamped segments (0s – 19s)",
+        "modelUsed": "gemini_audio_stt"
+      },
+      {
+        "id": "4",
+        "name": "CLEANING",
+        "label": "Transcript Cleaning",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Completed Transcript Cleaning",
+        "modelUsed": "Deterministic Cleaner"
+      },
+      {
+        "id": "5",
+        "name": "TRANSLATION",
+        "label": "Multi-Language Translation",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "1:1 segment translations generated across 12 languages",
+        "modelUsed": "Segment Translator"
+      },
+      {
+        "id": "6",
+        "name": "TRANSLATION_QA",
+        "label": "Translation QA",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Completed Translation QA",
+        "modelUsed": "QA Verifier"
+      },
+      {
+        "id": "7",
+        "name": "STORYBOARD",
+        "label": "Storyboard Generation",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "3 semantic scenes mapped to segment IDs [1..5]",
+        "modelUsed": "Semantic Scene Segmenter"
+      },
+      {
+        "id": "8",
+        "name": "VISUAL_GEN",
+        "label": "Visual Frame Synthesis",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Completed Visual Frame Synthesis",
+        "modelUsed": "Scene Visualizer"
+      },
+      {
+        "id": "9",
+        "name": "VOICEOVER",
+        "label": "Voiceover Synthesis",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Synthesizing voiceover across 12 language(s)",
+        "modelUsed": "Google Translate TTS / Gemini TTS"
+      },
+      {
+        "id": "10",
+        "name": "SUBTITLES",
+        "label": "Subtitle Generation",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Completed Subtitle Generation",
+        "modelUsed": "Subtitle Engine"
+      },
+      {
+        "id": "11",
+        "name": "RENDER",
+        "label": "4K Cinematic Render",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Full MP4 video rendered and verified for playback & download",
+        "modelUsed": "FFmpeg MP4 / WebCodecs"
+      },
+      {
+        "id": "12",
+        "name": "QUALITY_CHECK",
+        "label": "Quality Verification",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Completed Quality Verification",
+        "modelUsed": "Quality Auditor"
+      }
+    ],
+    "logs": [
+      {
+        "timestamp": "10:47:15",
+        "stage": "TRANSCRIPTION",
+        "level": "INFO",
+        "message": "Verified 5 source transcript segments via gemini_audio_stt (19s)."
+      },
+      {
+        "timestamp": "10:47:15",
+        "stage": "STORYBOARD",
+        "level": "INFO",
+        "message": "Built 3 semantic scenes and 1 Character Registry entry/entries from transcript evidence."
+      },
+      {
+        "timestamp": "10:47:15",
+        "stage": "TRANSLATION",
+        "level": "INFO",
+        "message": "Translated 5 segments 1:1 into 12 target languages: TE, EN, HI, KN, ML, BN, GU, ES, PT, FR, ZH, RU."
+      },
+      {
+        "timestamp": "10:47:11",
+        "stage": "TRANSCRIPTION",
+        "level": "INFO",
+        "message": "Generated 5 timestamped transcript segments for \"Me at the zoo\" (19s)."
+      }
+    ],
+    "qualityAudit": {
+      "overallStatus": "NEEDS_REVIEW",
+      "checkedAt": "2026-10-12T10:47:32.704Z",
+      "missingTranscriptCoveragePct": 0,
+      "duplicatedSceneDialogueCount": 0,
+      "sceneGapCount": 0,
+      "sceneOverlapCount": 0,
+      "voiceoverDurationMismatchCount": 6,
+      "reusedImageCount": 0,
+      "unverifiedTranslationLanguageCount": 0,
+      "lowConfidenceSegmentCount": 0,
+      "checks": [
+        {
+          "id": "qa-transcript-coverage",
+          "category": "transcript",
+          "label": "Transcript-to-Storyboard Coverage",
+          "status": "PASS",
+          "summary": "5/5 transcript segments (100%) mapped to scenes.",
+          "details": "Every cleaned transcript segment is explicitly linked to a storyboard scene.",
+          "affectedStep": "transcript",
+          "affectedItemIds": []
+        },
+        {
+          "id": "qa-confidence-evidence",
+          "category": "character",
+          "label": "Transcription & Speaker Confidence Verification",
+          "status": "NEEDS_REVIEW",
+          "summary": "0 uncertain segment(s) and 1 inferred/unverified speaker(s) flagged for human review.",
+          "details": "Review speaker attributions and low-confidence segments in the Transcript or Review step.",
+          "affectedStep": "review",
+          "affectedItemIds": [
+            "char-narrator-unknown"
+          ]
+        },
+        {
+          "id": "qa-duplicated-dialogue",
+          "category": "storyboard",
+          "label": "Unique Scene Dialogue Integrity (No Modulo Repetition)",
+          "status": "PASS",
+          "summary": "0 duplicated dialogue lines across 3 scenes.",
+          "affectedStep": "storyboard",
+          "affectedItemIds": []
+        },
+        {
+          "id": "qa-scene-boundaries",
+          "category": "storyboard",
+          "label": "Scene Timeline Continuity (Gaps & Overlaps)",
+          "status": "PASS",
+          "summary": "Continuous scene timeline from 0s to 19s (0 overlaps, 0 unbridged gaps).",
+          "affectedStep": "storyboard",
+          "affectedItemIds": []
+        },
+        {
+          "id": "qa-reused-images",
+          "category": "storyboard",
+          "label": "Scene Visual Uniqueness & Asset Diversity",
+          "status": "PASS",
+          "summary": "All 3 scenes have distinct visual assets.",
+          "affectedStep": "storyboard",
+          "affectedItemIds": []
+        },
+        {
+          "id": "qa-translations",
+          "category": "translation",
+          "label": "Target Language Translations (3 Selected)",
+          "status": "PASS",
+          "summary": "All 3 selected target language(s) have complete 1:1 segment translations.",
+          "affectedStep": "voiceover",
+          "affectedItemIds": []
+        },
+        {
+          "id": "qa-voiceover-pacing",
+          "category": "voiceover",
+          "label": "Voice-Over Duration & Segment Pacing Alignment",
+          "status": "WARN",
+          "summary": "6 segment(s) in [EN, TE, HI] exceed 235 WPM speaking rate and may require latency or speed calibration.",
+          "affectedStep": "voiceover",
+          "affectedItemIds": [
+            "EN",
+            "TE",
+            "HI"
+          ]
+        }
+      ]
+    },
+    "exportJobs": {
+      "EXP-1791802035843-sc7ol": {
+        "jobId": "EXP-1791802035843-sc7ol",
+        "projectId": "VID-20261012-1568",
+        "languageCode": "en",
+        "exportMode": "storyboard_render",
+        "requestedResolution": "720p",
+        "aspectRatio": "16:9",
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "container": "mp4",
+        "videoCodec": "h264",
+        "audioCodec": "aac",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Verified 1280x720 (19s) .mp4 with h264/aac (530 KB).",
+        "createdAt": "2026-10-12T10:47:15.843Z",
+        "ttsProviderUsed": "google-translate-tts",
+        "ffprobeValidation": {
+          "verified": true,
+          "durationSeconds": 19,
+          "expectedDurationSeconds": 19,
+          "durationDeltaSeconds": 0,
+          "width": 1280,
+          "height": 720,
+          "fps": 24,
+          "videoCodec": "h264",
+          "audioCodec": "aac",
+          "hasVideoStream": true,
+          "hasAudioStream": true,
+          "containerFormat": "mov,mp4,m4a,3gp,3g2,mj2",
+          "fileExtension": "mp4",
+          "fileSizeBytes": 542359,
+          "qaStatus": "PASS",
+          "issues": []
+        },
+        "completedAt": "2026-10-12T10:47:18.937Z",
+        "downloadUrl": "/api/export/jobs/EXP-1791802035843-sc7ol/download"
+      },
+      "EXP-1791802038944-d2e83": {
+        "jobId": "EXP-1791802038944-d2e83",
+        "projectId": "VID-20261012-1568",
+        "languageCode": "te",
+        "exportMode": "storyboard_render",
+        "requestedResolution": "720p",
+        "aspectRatio": "16:9",
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "container": "mp4",
+        "videoCodec": "h264",
+        "audioCodec": "aac",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Verified 1280x720 (19s) .mp4 with h264/aac (514 KB).",
+        "createdAt": "2026-10-12T10:47:18.944Z",
+        "ttsProviderUsed": "google-translate-tts",
+        "ffprobeValidation": {
+          "verified": true,
+          "durationSeconds": 19,
+          "expectedDurationSeconds": 19,
+          "durationDeltaSeconds": 0,
+          "width": 1280,
+          "height": 720,
+          "fps": 24,
+          "videoCodec": "h264",
+          "audioCodec": "aac",
+          "hasVideoStream": true,
+          "hasAudioStream": true,
+          "containerFormat": "mov,mp4,m4a,3gp,3g2,mj2",
+          "fileExtension": "mp4",
+          "fileSizeBytes": 526534,
+          "qaStatus": "PASS",
+          "issues": []
+        },
+        "completedAt": "2026-10-12T10:47:24.272Z",
+        "downloadUrl": "/api/export/jobs/EXP-1791802038944-d2e83/download"
+      },
+      "EXP-1791802038975-l4kyk": {
+        "jobId": "EXP-1791802038975-l4kyk",
+        "projectId": "VID-20261012-1568",
+        "languageCode": "te",
+        "exportMode": "storyboard_render",
+        "requestedResolution": "720p",
+        "aspectRatio": "16:9",
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "container": "mp4",
+        "videoCodec": "h264",
+        "audioCodec": "aac",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Verified 1280x720 (19s) .mp4 with h264/aac (513 KB).",
+        "createdAt": "2026-10-12T10:47:18.975Z",
+        "ttsProviderUsed": "google-translate-tts",
+        "ffprobeValidation": {
+          "verified": true,
+          "durationSeconds": 19,
+          "expectedDurationSeconds": 19,
+          "durationDeltaSeconds": 0,
+          "width": 1280,
+          "height": 720,
+          "fps": 24,
+          "videoCodec": "h264",
+          "audioCodec": "aac",
+          "hasVideoStream": true,
+          "hasAudioStream": true,
+          "containerFormat": "mov,mp4,m4a,3gp,3g2,mj2",
+          "fileExtension": "mp4",
+          "fileSizeBytes": 525054,
+          "qaStatus": "PASS",
+          "issues": []
+        },
+        "completedAt": "2026-10-12T10:47:24.318Z",
+        "downloadUrl": "/api/export/jobs/EXP-1791802038975-l4kyk/download"
+      },
+      "EXP-1791802044276-g4s7a": {
+        "jobId": "EXP-1791802044276-g4s7a",
+        "projectId": "VID-20261012-1568",
+        "languageCode": "hi",
+        "exportMode": "storyboard_render",
+        "requestedResolution": "720p",
+        "aspectRatio": "16:9",
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "container": "mp4",
+        "videoCodec": "h264",
+        "audioCodec": "aac",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Verified 1280x720 (19s) .mp4 with h264/aac (504 KB).",
+        "createdAt": "2026-10-12T10:47:24.276Z",
+        "ttsProviderUsed": "google-translate-tts",
+        "ffprobeValidation": {
+          "verified": true,
+          "durationSeconds": 19,
+          "expectedDurationSeconds": 19,
+          "durationDeltaSeconds": 0,
+          "width": 1280,
+          "height": 720,
+          "fps": 24,
+          "videoCodec": "h264",
+          "audioCodec": "aac",
+          "hasVideoStream": true,
+          "hasAudioStream": true,
+          "containerFormat": "mov,mp4,m4a,3gp,3g2,mj2",
+          "fileExtension": "mp4",
+          "fileSizeBytes": 515767,
+          "qaStatus": "PASS",
+          "issues": []
+        },
+        "completedAt": "2026-10-12T10:47:29.369Z",
+        "downloadUrl": "/api/export/jobs/EXP-1791802044276-g4s7a/download"
+      },
+      "EXP-1791802044321-bq34b": {
+        "jobId": "EXP-1791802044321-bq34b",
+        "projectId": "VID-20261012-1568",
+        "languageCode": "hi",
+        "exportMode": "storyboard_render",
+        "requestedResolution": "720p",
+        "aspectRatio": "16:9",
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "container": "mp4",
+        "videoCodec": "h264",
+        "audioCodec": "aac",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Verified 1280x720 (19s) .mp4 with h264/aac (504 KB).",
+        "createdAt": "2026-10-12T10:47:24.321Z",
+        "ttsProviderUsed": "google-translate-tts",
+        "ffprobeValidation": {
+          "verified": true,
+          "durationSeconds": 19,
+          "expectedDurationSeconds": 19,
+          "durationDeltaSeconds": 0,
+          "width": 1280,
+          "height": 720,
+          "fps": 24,
+          "videoCodec": "h264",
+          "audioCodec": "aac",
+          "hasVideoStream": true,
+          "hasAudioStream": true,
+          "containerFormat": "mov,mp4,m4a,3gp,3g2,mj2",
+          "fileExtension": "mp4",
+          "fileSizeBytes": 516253,
+          "qaStatus": "PASS",
+          "issues": []
+        },
+        "completedAt": "2026-10-12T10:47:29.411Z",
+        "downloadUrl": "/api/export/jobs/EXP-1791802044321-bq34b/download"
+      },
+      "EXP-1791802049378-jcmce": {
+        "jobId": "EXP-1791802049378-jcmce",
+        "projectId": "VID-20261012-1568",
+        "languageCode": "kn",
+        "exportMode": "storyboard_render",
+        "requestedResolution": "720p",
+        "aspectRatio": "16:9",
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "container": "mp4",
+        "videoCodec": "h264",
+        "audioCodec": "aac",
+        "status": "COMPLETED",
+        "progress": 100,
+        "message": "Verified 1280x720 (19s) .mp4 with h264/aac (522 KB).",
+        "createdAt": "2026-10-12T10:47:29.379Z",
+        "ttsProviderUsed": "google-translate-tts",
+        "ffprobeValidation": {
+          "verified": true,
+          "durationSeconds": 19,
+          "expectedDurationSeconds": 19,
+          "durationDeltaSeconds": 0,
+          "width": 1280,
+          "height": 720,
+          "fps": 24,
+          "videoCodec": "h264",
+          "audioCodec": "aac",
+          "hasVideoStream": true,
+          "hasAudioStream": true,
+          "containerFormat": "mov,mp4,m4a,3gp,3g2,mj2",
+          "fileExtension": "mp4",
+          "fileSizeBytes": 534228,
+          "qaStatus": "PASS",
+          "issues": []
+        },
+        "completedAt": "2026-10-12T10:47:32.704Z",
+        "downloadUrl": "/api/export/jobs/EXP-1791802049378-jcmce/download"
+      }
+    },
+    "lastTtsProvider": "google-translate-tts"
+  }
+]

@@ -135,7 +135,8 @@ export default function App() {
               p.name,
               {
                 isDemoMode: Boolean(p.isDemoMode),
-                sourceLanguage: (p.sourceLanguage as LanguageCode) || 'en'
+                sourceLanguage: (p.sourceLanguage as LanguageCode) || 'en',
+                baseScenes: p.scenes
               }
             );
             return {
@@ -486,7 +487,8 @@ export default function App() {
               apiData.name || videoName,
               {
                 isDemoMode: Boolean(apiData.isDemoMode),
-                sourceLanguage: (apiData.sourceLanguage as LanguageCode) || 'en'
+                sourceLanguage: (apiData.sourceLanguage as LanguageCode) || 'en',
+                baseScenes: scenes
               }
             );
 
@@ -999,7 +1001,8 @@ export default function App() {
             p.name,
             {
               isDemoMode: Boolean(p.isDemoMode),
-              sourceLanguage: (p.sourceLanguage as LanguageCode) || 'en'
+              sourceLanguage: (p.sourceLanguage as LanguageCode) || 'en',
+              baseScenes: regeneratedScenes
             }
           )
         };

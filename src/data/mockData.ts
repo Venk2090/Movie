@@ -1,7 +1,8 @@
-import { Project, LanguageCode, Scene, TranscriptSegment, LocalizedOutput, PipelineStage } from '../types';
+import { Project, LanguageCode, Scene, TranscriptSegment, LocalizedOutput, PipelineStage, CharacterRegistryEntry } from '../types';
 import { SUPPORTED_LANGUAGES, INITIAL_11_LANGUAGES } from './languages';
 import {
   generateSceneArtwork,
+  deriveEmotionFromTranscript,
   DEFAULT_CHARACTER_CONSISTENCY,
   prependCharacterConsistencyToPrompt
 } from '../utils/sceneArt';
@@ -500,6 +501,8 @@ export const INITIAL_SCENES: Scene[] = [
     environment: "Bengaluru Urban Skyline & Expressway",
     style: "cinematic documentary 4k",
     motionPreset: 'pan',
+    emotion: 'Investigative Appeal',
+    emotionalTone: 'Authoritative Field Journalism & Metropolis Awakening',
     characterPrompt: DEFAULT_CHARACTER_CONSISTENCY.compiledPrompt,
     imageUrl: generateSceneArtwork(
       {
@@ -541,6 +544,8 @@ export const INITIAL_SCENES: Scene[] = [
     environment: "Outer Ring Road Silk Board Intersection",
     style: "cinematic technical 4k",
     motionPreset: 'dolly',
+    emotion: 'Dramatic Urgency',
+    emotionalTone: 'Severe Traffic Bottlenecks & Commuter Crisis',
     characterPrompt: DEFAULT_CHARACTER_CONSISTENCY.compiledPrompt,
     imageUrl: generateSceneArtwork(
       {
@@ -582,6 +587,8 @@ export const INITIAL_SCENES: Scene[] = [
     environment: "Urban Residential Enclave & Street Market",
     style: "editorial documentary 4k",
     motionPreset: 'crane',
+    emotion: 'Dramatic Urgency',
+    emotionalTone: 'Citizen Hardship & Infrastructure Deficit Inquest',
     characterPrompt: DEFAULT_CHARACTER_CONSISTENCY.compiledPrompt,
     imageUrl: generateSceneArtwork(
       {
@@ -623,6 +630,8 @@ export const INITIAL_SCENES: Scene[] = [
     environment: "Civic Administration Plaza & News Desk",
     style: "cinematic conceptual 4k",
     motionPreset: 'drift',
+    emotion: 'Civic Reform',
+    emotionalTone: 'Democratic Accountability & Governance Reform Appeal',
     characterPrompt: DEFAULT_CHARACTER_CONSISTENCY.compiledPrompt,
     imageUrl: generateSceneArtwork(
       {
@@ -669,6 +678,7 @@ function formatTimestamp(sec: number, separator = ','): string {
 export interface BuildLocalizedOutputsOptions {
   isDemoMode?: boolean;
   sourceLanguage?: LanguageCode;
+  baseScenes?: Scene[];
 }
 
 function countReadingWords(text: string): number {
@@ -774,10 +784,77 @@ export function buildLocalizedOutputs(
       qaStatus = 'WARN';
     }
 
+    // Build localized storyboard scenes with localized dialogue, emotion, and cinematic artwork for this language
+    const sourceScenes =
+      options.baseScenes && options.baseScenes.length > 0 ? options.baseScenes : INITIAL_SCENES;
+    const localizedScenes: Scene[] = sourceScenes.map((sc, scIdx) => {
+      const scSegIds = sc.segmentIds || sc.transcriptSegmentIds || [];
+      let matchedSegs = segs.filter(s => scSegIds.includes(s.id));
+      if (matchedSegs.length === 0) {
+        matchedSegs = segs.filter(s => s.end > sc.startTime + 0.05 && s.start < sc.endTime - 0.05);
+      }
+      if (matchedSegs.length === 0 && segs[scIdx]) {
+        matchedSegs = [segs[scIdx]];
+      }
+
+      const localizedDialogue =
+        matchedSegs.length > 0
+          ? matchedSegs.map(s => s.text).filter(Boolean).join(' ')
+          : sc.dialogue;
+
+      const emotionData = deriveEmotionFromTranscript(
+        `${localizedDialogue} ${sc.summary} ${sc.visualDescription}`
+      );
+
+      const localizedSummary =
+        localizedDialogue.length > 0
+          ? localizedDialogue.length <= 110
+            ? localizedDialogue
+            : `${localizedDialogue.slice(0, 107).replace(/\s+\S*$/, '')}...`
+          : sc.summary;
+
+      const localizedArt = generateSceneArtwork(
+        {
+          id: sc.id,
+          sceneNumber: sc.sceneNumber || scIdx + 1,
+          summary: localizedSummary,
+          dialogue: localizedDialogue,
+          visualDescription: sc.visualDescription || sc.prompt,
+          prompt: sc.prompt || sc.visualDescription,
+          camera: sc.camera || '24mm Anamorphic Prime f/1.4',
+          lighting: sc.lighting || 'Volumetric Golden Key Light',
+          environment: sc.environment || 'Cinematic Documentary Setting',
+          startTime: sc.startTime,
+          endTime: sc.endTime,
+          motionPreset: sc.motionPreset || 'pan',
+          transitionPreset: sc.transitionPreset || 'cross-fade',
+          seed: (sc.seed || 42000) + scIdx * 17,
+          characterIds: sc.characterIds,
+          depictionMode: sc.depictionMode,
+          emotion: emotionData.emotion,
+          emotionalTone: emotionData.emotionalTone,
+          languageCode: lang
+        },
+        videoContextTitle || sc.summary,
+        scIdx,
+        sourceScenes.length
+      );
+
+      return {
+        ...sc,
+        dialogue: localizedDialogue,
+        summary: localizedSummary,
+        imageUrl: localizedArt,
+        emotion: emotionData.emotion,
+        emotionalTone: emotionData.emotionalTone
+      };
+    });
+
     outputs[lang] = {
       languageCode: lang,
       languageName: SUPPORTED_LANGUAGES[lang]?.name || lang,
       translationSegments: segs,
+      scenes: localizedScenes,
       subtitlesSrt: srt,
       subtitlesVtt: vtt,
       audioWavUrl: `/storage/voiceovers/${lang}/voiceover.wav`,
@@ -812,36 +889,84 @@ export const DEFAULT_PIPELINE_STAGES: PipelineStage[] = [
   { id: '12', name: 'QUALITY_CHECK', label: 'Quality Verification', status: 'PENDING', progress: 0, message: 'Awaiting rendered video output', modelUsed: 'Quality Auditor' }
 ];
 
+export const INITIAL_CHARACTER_REGISTRY: CharacterRegistryEntry[] = [
+  {
+    id: 'char-speaker-journalist-sai',
+    name: 'Journalist Sai',
+    role: 'Transcript-Evidenced Field Correspondent & Investigative Anchor',
+    evidenceSegmentIds: [1, 2, 3, 4],
+    evidenceQuotes: [
+      'నమస్కారం, జర్నలిస్ట్ సాయి విశ్లేషణకు స్వాగతం. బెంగళూరు నగరంలో సామాన్య ప్రజల జీవన విధానంపై కథనం.'
+    ],
+    presenceType: 'speaking_on_camera',
+    confidence: 'high',
+    visualDescription: 'Professional Indian field journalist reporting on location in Bengaluru, wearing a tailored navy press blazer with lapel microphone, confident investigative stance with authentic expressions.',
+    wardrobeTraits: 'Navy blue correspondent blazer with press badge',
+    clothing: 'Navy blue blazer, crisp white formal shirt',
+    hairstyle: 'Neat side-parted professional black hair',
+    identityKnown: true,
+    visualAttributes: {
+      description: 'Documentary investigative journalist Sai',
+      clothing: 'Navy blue blazer, crisp white shirt',
+      hairstyle: 'Neat professional hair',
+      accessories: 'Broadcast lapel microphone'
+    },
+    compiledPrompt: 'Documentary field journalist Sai in navy blazer reporting on Bengaluru urban challenges, photorealistic 35mm film still'
+  },
+  {
+    id: 'char-mentioned-commuters',
+    name: 'Urban Commuters & Working Citizens',
+    role: 'Documentary Subjects (Bangalore Tech Corridor & Transit Workers)',
+    evidenceSegmentIds: [2, 3],
+    presenceType: 'visible_subject',
+    confidence: 'high',
+    visualDescription: 'Daily commuters, IT corridor employees, and bus passengers caught in Outer Ring Road traffic bottlenecks, authentic natural lighting and expressions.',
+    wardrobeTraits: 'Contemporary everyday office and commuter attire',
+    clothing: 'Smart casuals and commuter backpacks',
+    hairstyle: 'Natural everyday hair',
+    identityKnown: true,
+    visualAttributes: {
+      description: 'Bengaluru daily transit passengers and workers',
+      clothing: 'Everyday commuter attire',
+      hairstyle: 'Natural',
+      accessories: 'Commuter bags and transit cards'
+    },
+    compiledPrompt: 'Everyday commuters and tech employees navigating Bengaluru Outer Ring Road transit corridor'
+  }
+];
+
 export const INITIAL_PROJECT: Project = {
   id: 'VID-WORKSPACE-READY',
-  name: 'New YouTube Video Project',
-  description: 'Paste any YouTube URL above to automatically generate the transcript, storyboard scenes, multi-language translations, and full video.',
+  name: 'Bengaluru Urban Transit Crisis & Traffic Bottleneck Investigation',
+  description: 'Special investigative documentary on Bengaluru traffic congestion, cost of living, and municipal infrastructure reforms presented by Journalist Sai.',
   sourceType: 'youtube',
-  sourceUrl: '',
-  sourceLanguage: 'en',
-  detectedLanguage: 'Auto-Detect on URL Ingest',
+  sourceUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  sourceLanguage: 'te',
+  detectedLanguage: 'Telugu (te) · Verified Ground Report',
   targetLanguages: INITIAL_11_LANGUAGES,
   resolution: '1080p',
+  aspectRatio: '16:9',
+  visualStylePreset: 'cinematic-documentary',
   ttsVoice: 'Kore',
-  status: 'PENDING',
-  progress: 0,
-  currentStage: 'INGESTION',
-  durationSeconds: 0,
-  totalStorageBytes: 0,
+  status: 'COMPLETED',
+  progress: 100,
+  currentStage: 'COMPLETE',
+  durationSeconds: 133.0,
+  totalStorageBytes: 24600000,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
-  isDemoMode: false,
-  scenes: [],
-  rawTranscript: [],
-  cleanTranscript: [],
-  characterRegistry: [],
+  isDemoMode: true,
+  scenes: INITIAL_SCENES,
+  rawTranscript: INITIAL_RAW_TRANSCRIPT,
+  cleanTranscript: INITIAL_RAW_TRANSCRIPT,
+  characterRegistry: INITIAL_CHARACTER_REGISTRY,
   transcriptValidation: {
     valid: true,
-    segmentCount: 0,
+    segmentCount: INITIAL_RAW_TRANSCRIPT.length,
     coverageStart: 0,
-    coverageEnd: 0,
-    mediaDurationSeconds: 0,
-    totalSpokenSeconds: 0,
+    coverageEnd: 133.0,
+    mediaDurationSeconds: 133.0,
+    totalSpokenSeconds: 133.0,
     silentGapCount: 0,
     overlapCount: 0,
     invalidBoundsCount: 0,
@@ -849,11 +974,35 @@ export const INITIAL_PROJECT: Project = {
   },
   localizedOutputs: buildLocalizedOutputs(
     INITIAL_11_LANGUAGES,
-    [],
+    INITIAL_RAW_TRANSCRIPT,
     undefined,
-    '',
-    { isDemoMode: false, sourceLanguage: 'en' }
+    'Bengaluru Urban Transit Crisis & Traffic Bottleneck Investigation',
+    { isDemoMode: true, sourceLanguage: 'te', baseScenes: INITIAL_SCENES }
   ),
-  stages: DEFAULT_PIPELINE_STAGES,
-  logs: []
+  stages: DEFAULT_PIPELINE_STAGES.map(s => ({
+    ...s,
+    status: 'COMPLETED',
+    progress: 100,
+    message: `${s.label} verified and ready for playback & review`
+  })),
+  logs: [
+    {
+      timestamp: '00:00:01',
+      stage: 'INGESTION',
+      level: 'INFO',
+      message: 'Ingested Bengaluru transit crisis source media with 4 timestamped segments.'
+    },
+    {
+      timestamp: '00:00:03',
+      stage: 'STORYBOARD',
+      level: 'INFO',
+      message: 'Generated 4 semantic 4K scenes with camera rigs, lighting, and visual direction.'
+    },
+    {
+      timestamp: '00:00:05',
+      stage: 'VOICEOVER',
+      level: 'INFO',
+      message: 'Synthesized neural voiceovers across all 11 target languages.'
+    }
+  ]
 };

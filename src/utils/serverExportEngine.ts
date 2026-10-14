@@ -18,6 +18,10 @@ import {
   computeProjectQualityAudit,
   decodeHtmlEntities
 } from './transcriptPipeline';
+import {
+  VISUAL_FILTER_PRESETS,
+  mapEmotionToVisualFilter
+} from './sceneArt';
 
 const execFileAsync = promisify(execFile);
 
@@ -60,7 +64,8 @@ export function loadProjectsStore(): Project[] {
               p.name,
               {
                 isDemoMode: Boolean(p.isDemoMode),
-                sourceLanguage: (p.sourceLanguage as LanguageCode) || 'en'
+                sourceLanguage: (p.sourceLanguage as LanguageCode) || 'en',
+                baseScenes: p.scenes
               }
             );
             p.targetLanguages = INITIAL_11_LANGUAGES;
@@ -609,6 +614,22 @@ function resolveLocalSceneImagePath(
 
   if (trimmed.startsWith('data:image/')) {
     if (trimmed.startsWith('data:image/svg')) {
+      const outPath = path.join(jobWorkDir, `scene_frame_${sceneIndex + 1}.svg`);
+      let svgStr = '';
+      if (trimmed.includes(';base64,')) {
+        const b64 = trimmed.split(';base64,')[1];
+        try {
+          svgStr = Buffer.from(b64, 'base64').toString('utf-8');
+        } catch {
+          svgStr = '';
+        }
+      } else {
+        svgStr = decodeURIComponent(trimmed.replace(/^data:image\/svg\+xml;?(?:utf8,)?/i, ''));
+      }
+      if (svgStr && svgStr.length > 20) {
+        fs.writeFileSync(outPath, svgStr, 'utf-8');
+        return outPath;
+      }
       return writeProceduralScenePpm(ppmFallbackPath, sceneIndex);
     }
     const match = trimmed.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
@@ -830,14 +851,6 @@ export async function startServerVideoExportJob(
     }
   }
 
-  const scenes = project.scenes || [];
-  if (scenes.length === 0) {
-    job.status = 'FAILED';
-    job.error = 'Project has no storyboard scenes to render.';
-    job.message = job.error;
-    return { job, errorStatus: 422 };
-  }
-
   let langOutput = project.localizedOutputs?.[languageCode];
   if (!langOutput || !langOutput.translationSegments || langOutput.translationSegments.length === 0) {
     const generated = buildLocalizedOutputs(
@@ -849,13 +862,26 @@ export async function startServerVideoExportJob(
       project.name || INITIAL_PROJECT.name,
       {
         isDemoMode: Boolean(project.isDemoMode),
-        sourceLanguage: (project.sourceLanguage as LanguageCode) || 'en'
+        sourceLanguage: (project.sourceLanguage as LanguageCode) || 'en',
+        baseScenes: project.scenes
       }
     );
     langOutput = generated[languageCode];
     if (project.localizedOutputs) {
       project.localizedOutputs[languageCode] = langOutput;
     }
+  }
+
+  const scenes =
+    langOutput?.scenes && langOutput.scenes.length > 0
+      ? langOutput.scenes
+      : project.scenes || [];
+
+  if (scenes.length === 0) {
+    job.status = 'FAILED';
+    job.error = 'Project has no storyboard scenes to render.';
+    job.message = job.error;
+    return { job, errorStatus: 422 };
   }
 
   const segments =
@@ -882,12 +908,15 @@ export async function startServerVideoExportJob(
       // Validate that every scene image resolves to a real image on disk
       const lastSceneEnd = scenes[scenes.length - 1]?.endTime || 0;
       const lastSegEnd = segments[segments.length - 1]?.end || 0;
-      const totalDuration = Math.max(
+      let totalDuration = Math.max(
         1,
         project.durationSeconds || 0,
         lastSceneEnd,
         lastSegEnd
       );
+      if (totalDuration > 1800) {
+        totalDuration = Math.max(30, Math.min(lastSceneEnd > 0 && lastSceneEnd < 1800 ? lastSceneEnd : 120, 300));
+      }
 
       // 1. Synthesize & place ALL translated segments onto a 24kHz mono PCM master audio timeline
       job.progress = 18;
@@ -1115,9 +1144,9 @@ export async function startServerVideoExportJob(
         }
         await execFileAsync('ffmpeg', ffArgs);
       } else {
-        // Storyboard Visuals Mode: verify and pre-scale every scene image to exact requested dimensions
+        // Storyboard Visuals Mode: render each scene with real cinematic camera motion (Ken Burns pan/dolly/crane/orbit)
         const scaledImageCache = new Map<string, string>();
-        const concatLines: string[] = [];
+        const clipPaths: string[] = [];
 
         for (let i = 0; i < scenes.length; i++) {
           if (cancelledJobsSet.has(jobId)) throw new Error('Cancelled by user');
@@ -1129,6 +1158,8 @@ export async function startServerVideoExportJob(
             );
           }
 
+          const zpW = Math.min(1920, width);
+          const zpH = Math.min(1080, height);
           let scaledImgPath = scaledImageCache.get(localImg);
           if (!scaledImgPath) {
             scaledImgPath = path.join(jobWorkDir, `scaled_${scaledImageCache.size + 1}.jpg`);
@@ -1139,9 +1170,9 @@ export async function startServerVideoExportJob(
               '-i',
               localImg,
               '-vf',
-              `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height}`,
+              `scale=${zpW}:${zpH}:force_original_aspect_ratio=increase,crop=${zpW}:${zpH}`,
               '-q:v',
-              '3',
+              '2',
               scaledImgPath
             ]);
             scaledImageCache.set(localImg, scaledImgPath);
@@ -1154,20 +1185,67 @@ export async function startServerVideoExportJob(
               ? totalDuration
               : Math.max(sc.endTime, scenes[i + 1].startTime);
           const dur = Math.max(0.5, Math.round((end - start) * 1000) / 1000);
+          const sceneFrames = Math.max(24, Math.round(dur * 24));
 
-          concatLines.push(`file '${scaledImgPath.replace(/'/g, "'\\''")}'`);
-          concatLines.push(`duration ${dur.toFixed(3)}`);
-          if (i === scenes.length - 1) {
-            // Repeat final file entry as required by FFmpeg concat demuxer
-            concatLines.push(`file '${scaledImgPath.replace(/'/g, "'\\''")}'`);
+          // Real cinematic camera motion preset via FFmpeg zoompan + cinematic color grade
+          const motion = sc.motionPreset || 'pan';
+          const motionIntensity = Math.max(0.5, Math.min(2.5, sc.motionIntensity || 1.0));
+          const zoomRate = (0.0018 * motionIntensity).toFixed(4);
+          const panRate = (0.7 * motionIntensity).toFixed(3);
+
+          let motionExpr = '';
+          if (motion === 'dolly') {
+            motionExpr = `zoompan=z=\x27min(zoom+${zoomRate},1.28)\x27:x=\x27iw/2-(iw/zoom/2)\x27:y=\x27ih/2-(ih/zoom/2)\x27:d=${sceneFrames}:s=${zpW}x${zpH}:fps=24`;
+          } else if (motion === 'pan') {
+            motionExpr = `zoompan=z=1.16:x=\x27if(lte(on,1),(iw-iw/zoom)*0.15,x+((iw-iw/zoom)*${panRate}/${sceneFrames}))\x27:y=\x27ih/2-(ih/zoom/2)\x27:d=${sceneFrames}:s=${zpW}x${zpH}:fps=24`;
+          } else if (motion === 'crane') {
+            motionExpr = `zoompan=z=1.15:x=\x27iw/2-(iw/zoom/2)\x27:y=\x27if(lte(on,1),(ih-ih/zoom)*0.85,max(0,y-((ih-ih/zoom)*${panRate}/${sceneFrames})))\x27:d=${sceneFrames}:s=${zpW}x${zpH}:fps=24`;
+          } else {
+            motionExpr = `zoompan=z=\x27min(zoom+${(0.0012 * motionIntensity).toFixed(4)},1.22)\x27:x=\x27(iw/2-(iw/zoom/2))*(1+${(0.07 * motionIntensity).toFixed(3)}*sin(2*PI*on/${sceneFrames}))\x27:y=\x27(ih/2-(ih/zoom/2))*(1+${(0.05 * motionIntensity).toFixed(3)}*cos(2*PI*on/${sceneFrames}))\x27:d=${sceneFrames}:s=${zpW}x${zpH}:fps=24`;
           }
+
+          const resolvedFilterId =
+            sc.visualFilterPreset && sc.visualFilterPreset !== 'default'
+              ? sc.visualFilterPreset
+              : mapEmotionToVisualFilter(sc.emotion, sc.emotionalTone);
+          const filterMeta =
+            VISUAL_FILTER_PRESETS.find(f => f.id === resolvedFilterId) || VISUAL_FILTER_PRESETS[0];
+          const colorGradeFilter =
+            filterMeta?.ffmpegFilter || 'eq=contrast=1.06:brightness=0.01:saturation=1.10';
+
+          const scaleStep = width !== zpW ? `,scale=${width}:${height}:flags=lanczos` : '';
+          const vfCombined = `${motionExpr}${scaleStep},${colorGradeFilter}`;
+
+          const sceneClipPath = path.join(jobWorkDir, `scene_clip_${i + 1}.mp4`);
+          await execFileAsync('ffmpeg', [
+            '-y',
+            '-v',
+            'error',
+            '-i',
+            scaledImgPath,
+            '-vf',
+            vfCombined,
+            '-c:v',
+            'libx264',
+            '-preset',
+            'ultrafast',
+            '-crf',
+            '22',
+            '-pix_fmt',
+            'yuv420p',
+            '-r',
+            '24',
+            sceneClipPath
+          ]);
+          clipPaths.push(sceneClipPath);
         }
 
+        const concatLines = clipPaths.map(p => `file '${p.replace(/'/g, "'\\''")}'`);
         const concatFilePath = path.join(jobWorkDir, 'scenes_concat.txt');
         fs.writeFileSync(concatFilePath, concatLines.join('\n') + '\n', 'utf-8');
 
         job.progress = 72;
-        job.message = `Encoding full ${totalDuration}s ${requestedResolution.toUpperCase()} (${width}x${height}) ${container.toUpperCase()} stream with FFmpeg...`;
+        job.message = `Encoding full ${totalDuration}s ${requestedResolution.toUpperCase()} (${width}x${height}) with cinematic camera motion & color grading...`;
 
         if (container === 'mp4') {
           await execFileAsync('ffmpeg', [
@@ -1191,17 +1269,7 @@ export async function startServerVideoExportJob(
             '-map',
             '2:s:0',
             '-c:v',
-            'libx264',
-            '-preset',
-            'ultrafast',
-            '-tune',
-            'stillimage',
-            '-crf',
-            '23',
-            '-pix_fmt',
-            'yuv420p',
-            '-r',
-            '24',
+            'copy',
             '-c:a',
             'aac',
             '-b:a',

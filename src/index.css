@@ -218,7 +218,7 @@
 .kb-motion-pan,
 .cinema-motion-0,
 .cinema-motion-pan {
-  animation: kenBurnsPanRight 9s ease-in-out infinite;
+  animation: kenBurnsPanRight var(--scene-motion-duration, 9s) ease-in-out infinite;
   will-change: transform;
   transform-origin: center center;
 }
@@ -226,7 +226,7 @@
 .kb-motion-dolly,
 .cinema-motion-1,
 .cinema-motion-dolly {
-  animation: kenBurnsDollyIn 8s ease-in-out infinite;
+  animation: kenBurnsDollyIn var(--scene-motion-duration, 8s) ease-in-out infinite;
   will-change: transform;
   transform-origin: 50% 38%;
 }
@@ -234,14 +234,14 @@
 .kb-motion-crane,
 .cinema-motion-3,
 .cinema-motion-crane {
-  animation: kenBurnsCraneUp 8.5s ease-in-out infinite;
+  animation: kenBurnsCraneUp var(--scene-motion-duration, 8.5s) ease-in-out infinite;
   will-change: transform;
   transform-origin: center center;
 }
 
 .kb-motion-orbit,
 .cinema-motion-orbit {
-  animation: kenBurnsOrbit3D 9.5s ease-in-out infinite;
+  animation: kenBurnsOrbit3D var(--scene-motion-duration, 9.5s) ease-in-out infinite;
   will-change: transform;
   transform-origin: 50% 42%;
 }
@@ -249,7 +249,7 @@
 .kb-motion-drift,
 .cinema-motion-2,
 .cinema-motion-drift {
-  animation: kenBurnsDriftLeft 9s ease-in-out infinite;
+  animation: kenBurnsDriftLeft var(--scene-motion-duration, 9s) ease-in-out infinite;
   will-change: transform;
   transform-origin: center center;
 }

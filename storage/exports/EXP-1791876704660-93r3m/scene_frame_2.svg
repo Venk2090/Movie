@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#11091f"/>
+      <stop offset="60%" stop-color="#24123b"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <!-- Volumetric Ambient Light -->
+    <radialGradient id="ambientGlow" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#ec4899" stop-opacity="0.28"/>
+      <stop offset="50%" stop-color="#a855f7" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Rocket Flame Gradient -->
+    <linearGradient id="flameGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#fef08a"/>
+      <stop offset="70%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#dc2626" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Studio Spotlight Beam -->
+    <linearGradient id="studioSpotGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Deep Atmospheric Background -->
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+  <rect width="1280" height="720" fill="url(#ambientGlow)"/>
+
+  <!-- Thematic Silhouette Illustration Layer -->
+  
+      <!-- Documentary Broadcast Studio, Camera Crane Rig & Soundwave Geometry -->
+      <g opacity="0.85">
+        <!-- Studio Ceiling Floodlight Truss -->
+        <line x1="160" y1="120" x2="1120" y2="120" stroke="#475569" stroke-width="4"/>
+        <rect x="320" y="120" width="30" height="24" fill="#334155"/>
+        <polygon points="305,144 365,144 420,380 250,380" fill="url(#studioSpotGrad)" opacity="0.22"/>
+        <rect x="740" y="120" width="30" height="24" fill="#334155"/>
+        <polygon points="725,144 785,144 860,380 650,380" fill="url(#studioSpotGrad)" opacity="0.22"/>
+        <!-- News Camera Rig Silhouette with Teleprompter on Tripod -->
+        <rect x="940" y="320" width="90" height="55" rx="6" fill="#090d16" stroke="#475569" stroke-width="2"/>
+        <circle cx="930" cy="347" r="16" fill="#020617" stroke="#38bdf8" stroke-width="2"/>
+        <line x1="985" y1="375" x2="940" y2="520" stroke="#0f172a" stroke-width="4"/>
+        <line x1="985" y1="375" x2="1030" y2="520" stroke="#0f172a" stroke-width="4"/>
+        <!-- Reporter with Microphone Silhouette -->
+        <circle cx="440" cy="320" r="32" fill="#090d16" stroke="#10b981" stroke-width="1.5"/>
+        <path d="M 380 520 L 410 390 Q 440 360 470 390 L 500 520 Z" fill="#090d16"/>
+        <line x1="475" y1="380" x2="505" y2="350" stroke="#f59e0b" stroke-width="3"/>
+        <circle cx="510" cy="345" r="7" fill="#f59e0b"/>
+      </g>
+
+  <!-- 2.39:1 Anamorphic Cinema Scope Matte Bars -->
+  <!-- Top Matte Bar -->
+  <rect x="0" y="0" width="1280" height="42" fill="#000000"/>
+  <line x1="0" y1="42" x2="1280" y2="42" stroke="#f59e0b" stroke-opacity="0.35" stroke-width="1.5"/>
+
+  <!-- Bottom Matte Bar -->
+  <rect x="0" y="678" width="1280" height="42" fill="#000000"/>
+  <line x1="0" y1="678" x2="1280" y2="678" stroke="#f59e0b" stroke-opacity="0.35" stroke-width="1.5"/>
+
+  <!-- Professional Viewfinder Camera HUD (Top Bar) -->
+  <circle cx="28" cy="21" r="5.5" fill="#ef4444"/>
+  <text x="42" y="26" font-family="monospace, 'Courier New', sans-serif" font-size="12" font-weight="bold" fill="#ffffff" letter-spacing="1">● REC 4K UHD</text>
+  <text x="180" y="26" font-family="monospace, 'Courier New', sans-serif" font-size="11" fill="#94a3b8">3840×2160 · 24.00 FPS · 2.39:1 SCOPE</text>
+  <text x="640" y="26" font-family="monospace, 'Courier New', sans-serif" font-size="12" font-weight="bold" fill="#f59e0b" text-anchor="middle">SCENE 02 / 04 · TC 85.6s – 128.4s</text>
+  <text x="1252" y="26" font-family="monospace, 'Courier New', sans-serif" font-size="11" font-weight="bold" fill="#38bdf8" text-anchor="end">[TE] LOCALIZED STORYBOARD</text>
+
+  <!-- Framing Crosshairs and Rule-of-Thirds Grid Markers -->
+  <g stroke="#ffffff" stroke-opacity="0.08" stroke-width="1">
+    <line x1="426" y1="42" x2="426" y2="678"/>
+    <line x1="854" y1="42" x2="854" y2="678"/>
+    <line x1="0" y1="254" x2="1280" y2="254"/>
+    <line x1="0" y1="466" x2="1280" y2="466"/>
+  </g>
+  <!-- Center Viewfinder Reticle -->
+  <circle cx="640" cy="360" r="18" fill="none" stroke="#f59e0b" stroke-opacity="0.45" stroke-width="1.2"/>
+  <line x1="630" y1="360" x2="650" y2="360" stroke="#f59e0b" stroke-opacity="0.6" stroke-width="1.2"/>
+  <line x1="640" y1="350" x2="640" y2="370" stroke="#f59e0b" stroke-opacity="0.6" stroke-width="1.2"/>
+
+  <!-- Top Badges Row: Emotion & Motion Rig -->
+  <g transform="translate(48, 62)">
+    <!-- Emotion Badge -->
+    <rect x="0" y="0" width="230" height="28" rx="6" fill="#020617" fill-opacity="0.85" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="12" y="19" font-family="sans-serif" font-size="13" font-weight="bold" fill="#ffffff">🎬 CINEMATIC NARRATIVE</text>
+
+    <!-- Motion Rig Badge -->
+    <rect x="242" y="0" width="180" height="28" rx="6" fill="#020617" fill-opacity="0.85" stroke="#38bdf8" stroke-width="1.5"/>
+    <text x="254" y="19" font-family="monospace, sans-serif" font-size="12" font-weight="bold" fill="#38bdf8">RIG: DOLLY · Medium Documen</text>
+
+    <!-- Lens Spec Badge -->
+    <rect x="434" y="0" width="220" height="28" rx="6" fill="#020617" fill-opacity="0.85" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="446" y="19" font-family="monospace, sans-serif" font-size="11" fill="#e9d5ff">LENS: Medium Documentary Trackin</text>
+  </g>
+
+  <!-- Lower-Third Glassmorphic Storyboard Dialogue Plate -->
+  <rect x="48" y="445" width="1184" height="215" rx="14" fill="#020617" fill-opacity="0.88" stroke="#a855f7" stroke-opacity="0.4" stroke-width="1.5"/>
+  <rect x="48" y="445" width="1184" height="6" fill="#a855f7"/>
+
+  <!-- Scene Title & Spoken Language Banner -->
+  <text x="74" y="478" font-family="sans-serif" font-size="20" font-weight="bold" fill="#ffffff">The Autobiography 📚 OUT NOW!</text>
+  
+  <text x="1210" y="478" font-family="monospace, sans-serif" font-size="12" font-weight="bold" fill="#a855f7" text-anchor="end">EMOTIVE BEAT: Measured Documentary Narrative &amp; High-Fide</text>
+
+  <!-- Localized Spoken Transcript Box -->
+  <rect x="74" y="515" width="1132" height="96" rx="8" fill="#090d16" fill-opacity="0.9" stroke="#334155" stroke-width="1"/>
+  <text x="94" y="536" font-family="monospace, sans-serif" font-size="11" font-weight="bold" fill="#a855f7">LOCALIZED SPOKEN TRANSCRIPT [TE] · TIME: 85.6s – 128.4s</text>
+  <text x="94" y="562" font-family="sans-serif" font-size="17" fill="#f8fafc" font-weight="500">The Autobiography 📚 OUT NOW!</text>
+
+  <!-- Technical Director Specs (Bottom of Plate) -->
+  <text x="74" y="638" font-family="monospace, sans-serif" font-size="11" fill="#38bdf8">CAMERA: Medium Documentary Tracking Shot (35mm P   |   LIGHTING: Naturalistic Documentary Key Lighting</text>
+  <text x="1210" y="638" font-family="monospace, sans-serif" font-size="11" fill="#94a3b8" text-anchor="end">SETTING: Documentary Subject Context</text>
+
+  <!-- Timeline Progress Bar in Bottom Matte -->
+  <rect x="0" y="714" width="1280" height="6" fill="#0f172a"/>
+  <rect x="0" y="714" width="640" height="6" fill="#a855f7"/>
+</svg>

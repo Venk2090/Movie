@@ -36,7 +36,9 @@ import {
   getSceneTransitionCssClass,
   getSceneTransitionOutCssClass,
   getDefaultTransitionPresetForIndex,
-  getSceneCinematicFilter
+  getSceneCinematicFilter,
+  VISUAL_FILTER_PRESETS,
+  mapEmotionToVisualFilter
 } from '../utils/sceneArt';
 import {
   speakLocalizedText,
@@ -145,7 +147,10 @@ export const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
 
   const currentOutput = project.localizedOutputs[selectedLanguage];
   const englishOutput = project.localizedOutputs.en;
-  const scenes = project.scenes;
+  const scenes =
+    currentOutput?.scenes && currentOutput.scenes.length > 0
+      ? currentOutput.scenes
+      : project.scenes;
 
   // Determine active scene based on currentTime
   const matchedSceneIdx = scenes.findIndex(
@@ -177,6 +182,25 @@ export const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
   const activeTransitionMeta =
     SCENE_TRANSITION_PRESETS.find(t => t.id === activeTransitionPreset) ||
     SCENE_TRANSITION_PRESETS[0];
+
+  const playerVisualFilterId =
+    currentScene?.visualFilterPreset && currentScene.visualFilterPreset !== 'default'
+      ? currentScene.visualFilterPreset
+      : mapEmotionToVisualFilter(currentScene?.emotion, currentScene?.emotionalTone);
+  const playerFilterMeta =
+    VISUAL_FILTER_PRESETS.find(f => f.id === playerVisualFilterId) || VISUAL_FILTER_PRESETS[0];
+
+  const playerMotionIntensity = currentScene?.motionIntensity ?? 1.0;
+  const playerSceneDuration =
+    currentScene?.duration ||
+    (currentScene ? Math.max(2, Math.round(currentScene.endTime - currentScene.startTime)) : 8) ||
+    8;
+  const playerMotionDuration = currentScene?.motionDurationSec ?? playerSceneDuration;
+  const playerEffectiveMotionDuration = Math.max(
+    1.5,
+    Math.min(25, playerMotionDuration / playerMotionIntensity)
+  );
+
   const prevSceneIndexRef = useRef<number>(currentSceneIndex);
   const [outgoingScene, setOutgoingScene] = useState<typeof currentScene | null>(null);
 
@@ -866,12 +890,19 @@ export const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
                   }`}
                 >
                   <img
-                    key={`scene-motion-${currentScene.id || currentSceneIndex}-${activeMotionPreset}`}
+                    key={`scene-motion-${currentScene.id || currentSceneIndex}-${activeMotionPreset}-${playerVisualFilterId}-${playerMotionIntensity}`}
                     src={currentScene.imageUrl}
                     alt={currentScene.summary}
                     referrerPolicy="no-referrer"
                     className={`w-full h-full object-cover ${activeMotionCssClass}`}
-                    style={getSceneCinematicFilter(currentSceneIndex, activeCharacter.archetype)}
+                    style={
+                      {
+                        filter: playerFilterMeta.cssFilter,
+                        objectPosition: 'center center',
+                        '--scene-motion-duration': `${playerEffectiveMotionDuration}s`,
+                        '--scene-motion-intensity': `${playerMotionIntensity}`
+                      } as React.CSSProperties
+                    }
                   />
                 </div>
               </div>
@@ -891,12 +922,21 @@ export const VideoPlayerPreview: React.FC<VideoPlayerPreviewProps> = ({
 
               {/* 2.39:1 Anamorphic Widescreen Cinema Scope Letterbox Bars */}
               <div className="absolute top-0 inset-x-0 h-5 sm:h-7 bg-black/95 border-b border-amber-400/20 pointer-events-none z-10 flex items-center justify-between px-4 text-[10px] font-mono text-slate-400">
-                <span className="text-amber-400 font-bold flex items-center gap-1.5">
+                <span className="text-amber-400 font-bold flex items-center gap-1.5 flex-wrap">
                   <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                   <span>4K ANAMORPHIC 2.39:1 MOVIE STREAM · {activeMotionMeta.lensSpec}</span>
+                  {currentScene?.emotion && (
+                    <span className="ml-1.5 px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[9px] font-mono font-bold uppercase flex items-center gap-1">
+                      <span>🎭</span>
+                      <span>{currentScene.emotion}</span>
+                    </span>
+                  )}
+                  <span className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold border ${playerFilterMeta.badgeBg}`}>
+                    {playerFilterMeta.label.toUpperCase()}
+                  </span>
                 </span>
                 <span className="hidden sm:inline text-cyan-300">
-                  CAMERA RIG: {activeMotionMeta.label.toUpperCase()} · TRANSITION: {activeTransitionMeta.shortLabel}
+                  CAMERA RIG: {activeMotionMeta.label.toUpperCase()} ({playerMotionIntensity.toFixed(1)}x) · TRANSITION: {activeTransitionMeta.shortLabel}
                 </span>
                 <span className="text-emerald-400 tabular-nums">
                   TC {formatPlayerTime(currentTime)}:{String(Math.floor((currentTime % 1) * 24)).padStart(2, '0')} / 24FPS

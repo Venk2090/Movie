@@ -12,6 +12,11 @@ import {
   ProjectQualityAudit,
   QualityCheckItem
 } from '../types';
+import {
+  deriveEmotionFromTranscript,
+  generateSceneArtwork,
+  generateCharacterAvatar
+} from './sceneArt';
 
 /**
  * Decodes common HTML entities found in YouTube timedtext / XML caption tracks.
@@ -579,7 +584,13 @@ export function buildCharacterRegistryFromTranscript(
     });
   }
 
-  return Array.from(registry.values());
+  const list = Array.from(registry.values());
+  list.forEach(entry => {
+    if (!entry.avatarUrl) {
+      entry.avatarUrl = generateCharacterAvatar(entry);
+    }
+  });
+  return list;
 }
 
 /**
@@ -621,6 +632,8 @@ export function deriveTranscriptGroundedVisuals(
   environment: string;
   characterIds: string[];
   depictionMode: SceneDepictionMode;
+  emotion: string;
+  emotionalTone: string;
 } {
   const combinedDialogue = group.map(s => s.text.trim()).filter(Boolean).join(' ');
   const segIds = group.map(s => s.id);
@@ -697,6 +710,8 @@ export function deriveTranscriptGroundedVisuals(
     visualDescription = `Illustrative non-human documentary cinematography of ${environment} (${group[0].start.toFixed(1)}s–${group[group.length - 1].end.toFixed(1)}s) grounded in spoken transcript: "${summary}".`;
   }
 
+  const emotionData = deriveEmotionFromTranscript(combinedDialogue);
+
   return {
     summary,
     visualDescription,
@@ -704,7 +719,9 @@ export function deriveTranscriptGroundedVisuals(
     lighting,
     environment,
     characterIds,
-    depictionMode
+    depictionMode,
+    emotion: emotionData.emotion,
+    emotionalTone: emotionData.emotionalTone
   };
 }
 
@@ -881,6 +898,8 @@ export function buildSemanticScenesFromTranscript(
       seed: 42000 + sceneNum,
       motionPreset,
       transitionPreset,
+      emotion: grounded.emotion,
+      emotionalTone: grounded.emotionalTone,
       characterPrompt:
         options.userConsistency?.enabled ? options.userConsistency.compiledPrompt : undefined,
       characterIds: grounded.characterIds,

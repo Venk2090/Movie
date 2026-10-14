@@ -3,6 +3,7 @@ import {
   Scene,
   CinematicMotionPreset,
   SceneTransitionPreset,
+  VisualFilterPreset,
   CharacterConsistencyConfig,
   LanguageCode,
   LocalizedOutput
@@ -28,7 +29,11 @@ import {
   XCircle,
   Lock,
   CheckSquare,
-  Square
+  Square,
+  Sliders,
+  Clock,
+  Palette,
+  RotateCcw
 } from 'lucide-react';
 import {
   generateSceneArtwork,
@@ -43,6 +48,8 @@ import {
   prependCharacterConsistencyToPrompt,
   DEFAULT_CHARACTER_CONSISTENCY,
   getSceneCinematicFilter,
+  VISUAL_FILTER_PRESETS,
+  mapEmotionToVisualFilter,
   ALL_PHOTOREALISTIC_HUMAN_FRAMES
 } from '../utils/sceneArt';
 import { speakLocalizedText, stopVoiceover } from '../utils/voiceover';
@@ -90,6 +97,9 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
   const [editLighting, setEditLighting] = useState('');
   const [editMotionPreset, setEditMotionPreset] = useState<CinematicMotionPreset>('pan');
   const [editTransitionPreset, setEditTransitionPreset] = useState<SceneTransitionPreset>('cross-fade');
+  const [editFilterPreset, setEditFilterPreset] = useState<VisualFilterPreset>('default');
+  const [editMotionIntensity, setEditMotionIntensity] = useState<number>(1.0);
+  const [editMotionDurationSec, setEditMotionDurationSec] = useState<number>(8.0);
   const [resynthesizingId, setResynthesizingId] = useState<number | null>(null);
   const [previewScene, setPreviewScene] = useState<Scene | null>(null);
   const [isBatchGenerating, setIsBatchGenerating] = useState(false);
@@ -279,6 +289,61 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
     }
   };
 
+  const handleSelectSceneFilterPreset = (
+    scene: Scene,
+    filterId: VisualFilterPreset
+  ) => {
+    if (humanReviewLocked) return;
+    const updated: Scene = {
+      ...scene,
+      visualFilterPreset: filterId,
+      userEdited: true
+    };
+    onUpdateScene(updated);
+    if (previewScene?.id === scene.id) {
+      setPreviewScene(updated);
+    }
+  };
+
+  const handleResetSceneFilterToEmotionAuto = (scene: Scene) => {
+    if (humanReviewLocked) return;
+    const updated: Scene = {
+      ...scene,
+      visualFilterPreset: 'default',
+      userEdited: true
+    };
+    onUpdateScene(updated);
+    if (previewScene?.id === scene.id) {
+      setPreviewScene(updated);
+    }
+  };
+
+  const handleChangeMotionIntensity = (scene: Scene, intensity: number) => {
+    if (humanReviewLocked) return;
+    const updated: Scene = {
+      ...scene,
+      motionIntensity: intensity,
+      userEdited: true
+    };
+    onUpdateScene(updated);
+    if (previewScene?.id === scene.id) {
+      setPreviewScene(updated);
+    }
+  };
+
+  const handleChangeMotionDuration = (scene: Scene, durationSec: number) => {
+    if (humanReviewLocked) return;
+    const updated: Scene = {
+      ...scene,
+      motionDurationSec: durationSec,
+      userEdited: true
+    };
+    onUpdateScene(updated);
+    if (previewScene?.id === scene.id) {
+      setPreviewScene(updated);
+    }
+  };
+
   const handleStartEdit = (scene: Scene, idx: number) => {
     if (humanReviewLocked) return;
     setEditingSceneId(scene.id);
@@ -287,6 +352,14 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
     setEditLighting(scene.lighting);
     setEditMotionPreset(scene.motionPreset || getDefaultMotionPresetForIndex(idx));
     setEditTransitionPreset(scene.transitionPreset || getDefaultTransitionPresetForIndex(idx));
+    setEditFilterPreset(scene.visualFilterPreset || 'default');
+    setEditMotionIntensity(scene.motionIntensity ?? 1.0);
+    setEditMotionDurationSec(
+      scene.motionDurationSec ??
+        scene.duration ??
+        Math.max(2, Math.round(scene.endTime - scene.startTime)) ??
+        8
+    );
   };
 
   const handleSaveEdit = (scene: Scene, idx: number) => {
@@ -328,6 +401,9 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
       characterPrompt: characterConsistency.compiledPrompt,
       seed: updatedSeed,
       imageUrl: newArt,
+      visualFilterPreset: editFilterPreset,
+      motionIntensity: editMotionIntensity,
+      motionDurationSec: editMotionDurationSec,
       userEdited: true
     });
     setEditingSceneId(null);
@@ -599,24 +675,30 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
     }, 350);
   };
 
-  const studioFromScene = scenes[studioPreviewPairIdx % Math.max(1, scenes.length)] || scenes[0];
+  const activeLocalizedScenes = localizedOutputs?.[selectedLanguage]?.scenes;
+  const currentDisplayScenes =
+    activeLocalizedScenes && activeLocalizedScenes.length > 0
+      ? activeLocalizedScenes
+      : scenes;
+
+  const studioFromScene = currentDisplayScenes[studioPreviewPairIdx % Math.max(1, currentDisplayScenes.length)] || currentDisplayScenes[0];
   const studioToScene =
-    scenes[(studioPreviewPairIdx + 1) % Math.max(1, scenes.length)] || scenes[0];
+    currentDisplayScenes[(studioPreviewPairIdx + 1) % Math.max(1, currentDisplayScenes.length)] || currentDisplayScenes[0];
   const activeGlobalTransitionMeta =
     SCENE_TRANSITION_PRESETS.find(t => t.id === globalTransitionPreset) ||
     SCENE_TRANSITION_PRESETS[0];
 
   const computedTotalDuration =
     totalDurationSeconds ||
-    scenes.reduce((max, s) => Math.max(max, s.endTime || 0), 0) ||
+    currentDisplayScenes.reduce((max, s) => Math.max(max, s.endTime || 0), 0) ||
     133;
 
   return (
     <div className="space-y-6">
       {/* Global Scene Timeline at the top of StoryboardView */}
-      {scenes.length > 0 && (
+      {currentDisplayScenes.length > 0 && (
         <SceneTimelineBar
-          scenes={scenes}
+          scenes={currentDisplayScenes}
           totalDurationSeconds={computedTotalDuration}
           selectedSceneId={internalSelectedSceneId}
           onSelectScene={(sc, idx) => {
@@ -635,7 +717,10 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
           <h2 className="text-base font-semibold text-white flex items-center gap-2 flex-wrap">
             <span>Storyboard &amp; Scenes</span>
             <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-              {scenes.length} Transcript-Aligned Scene{scenes.length === 1 ? '' : 's'}
+              {currentDisplayScenes.length} Transcript-Aligned Scene{currentDisplayScenes.length === 1 ? '' : 's'}
+            </span>
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+              {SUPPORTED_LANGUAGES[selectedLanguage]?.name || selectedLanguage.toUpperCase()} STORYBOARD
             </span>
             {humanReviewLocked && (
               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 flex items-center gap-1">
@@ -703,7 +788,7 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
         )}
       </div>
 
-      {scenes.length === 0 ? (
+      {currentDisplayScenes.length === 0 ? (
         <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-10 text-center space-y-2">
           <Film className="w-8 h-8 text-amber-400 mx-auto" />
           <h3 className="text-sm font-bold text-white">No Storyboard Scenes Generated Yet</h3>
@@ -713,13 +798,13 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
         </div>
       ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {scenes.map((scene, idx) => {
+        {currentDisplayScenes.map((scene, idx) => {
           const isEditing = editingSceneId === scene.id;
           const isGenerating = resynthesizingId === scene.id;
           const isSpeaking = speakingSceneId === scene.id;
           const isTransitioningCard = activeCardTransitionId === scene.id;
           const isFocusedCard = internalSelectedSceneId === scene.id;
-          const nextScene = scenes[(idx + 1) % Math.max(1, scenes.length)] || scene;
+          const nextScene = currentDisplayScenes[(idx + 1) % Math.max(1, currentDisplayScenes.length)] || scene;
           const reviewStatus =
             scene.reviewStatus || (scene.approved ? 'approved' : 'pending');
           const segIds = scene.transcriptSegmentIds || scene.segmentIds || [idx + 1];
@@ -753,6 +838,30 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
             }
           );
           const localizedDialogue = getLocalizedSceneText(scene, idx);
+
+          const activeVisualFilterId: VisualFilterPreset =
+            scene.visualFilterPreset && scene.visualFilterPreset !== 'default'
+              ? scene.visualFilterPreset
+              : mapEmotionToVisualFilter(scene.emotion, scene.emotionalTone);
+          const activeFilterMeta =
+            VISUAL_FILTER_PRESETS.find(f => f.id === activeVisualFilterId) ||
+            VISUAL_FILTER_PRESETS[0];
+          const autoMappedFilterId = mapEmotionToVisualFilter(scene.emotion, scene.emotionalTone);
+          const autoMappedFilterMeta =
+            VISUAL_FILTER_PRESETS.find(f => f.id === autoMappedFilterId) ||
+            VISUAL_FILTER_PRESETS[0];
+          const isCustomFilterOverride = Boolean(
+            scene.visualFilterPreset && scene.visualFilterPreset !== 'default'
+          );
+
+          const motionIntensity = scene.motionIntensity ?? 1.0;
+          const defaultSceneDuration =
+            scene.duration || Math.max(2, Math.round(scene.endTime - scene.startTime)) || 8;
+          const motionDurationSec = scene.motionDurationSec ?? defaultSceneDuration;
+          const effectiveMotionAnimDuration = Math.max(
+            1.5,
+            Math.min(25, motionDurationSec / motionIntensity)
+          );
 
           return (
             <div
@@ -789,6 +898,14 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
                         src={scene.imageUrl}
                         alt={scene.summary}
                         referrerPolicy="no-referrer"
+                        style={
+                          {
+                            filter: activeFilterMeta.cssFilter,
+                            objectPosition: 'center center',
+                            '--scene-motion-duration': `${effectiveMotionAnimDuration}s`,
+                            '--scene-motion-intensity': `${motionIntensity}`
+                          } as React.CSSProperties
+                        }
                         className={`w-full h-full object-cover ${motionCssClass}`}
                       />
                     </div>
@@ -800,6 +917,14 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
                         src={nextScene.imageUrl}
                         alt={nextScene.summary}
                         referrerPolicy="no-referrer"
+                        style={
+                          {
+                            filter: activeFilterMeta.cssFilter,
+                            objectPosition: 'center center',
+                            '--scene-motion-duration': `${effectiveMotionAnimDuration}s`,
+                            '--scene-motion-intensity': `${motionIntensity}`
+                          } as React.CSSProperties
+                        }
                         className={`w-full h-full object-cover ${motionCssClass}`}
                       />
                     </div>
@@ -811,11 +936,18 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
                   >
                     <div className={`w-full h-full ${isSpeaking ? 'character-speaking-active' : ''}`}>
                       <img
-                        key={`sb-img-${scene.id}-${activeMotionPreset}-${scene.seed}`}
+                        key={`sb-img-${scene.id}-${activeMotionPreset}-${scene.seed}-${activeVisualFilterId}-${motionIntensity}-${motionDurationSec}`}
                         src={scene.imageUrl}
                         alt={scene.summary}
                         referrerPolicy="no-referrer"
-                        style={getSceneCinematicFilter(idx, character.archetype)}
+                        style={
+                          {
+                            filter: activeFilterMeta.cssFilter,
+                            objectPosition: 'center center',
+                            '--scene-motion-duration': `${effectiveMotionAnimDuration}s`,
+                            '--scene-motion-intensity': `${motionIntensity}`
+                          } as React.CSSProperties
+                        }
                         className={`w-full h-full object-cover ${motionCssClass} ${
                           isGenerating ? 'opacity-40 blur-xs' : ''
                         }`}
@@ -884,8 +1016,18 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
                   <span>
                     Scene {String(scene.sceneNumber).padStart(2, '0')} · {scene.startTime}s - {scene.endTime}s
                   </span>
+                  <span className="text-amber-300 border-l border-white/20 pl-1.5 font-bold uppercase flex items-center gap-1">
+                    <span>🎭</span>
+                    <span>{scene.emotion || 'Dramatic'}</span>
+                  </span>
+                  <span
+                    className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold border ${activeFilterMeta.badgeBg}`}
+                    title={`Visual Style Filter: ${activeFilterMeta.label} (${activeFilterMeta.tag})`}
+                  >
+                    {activeFilterMeta.label}
+                  </span>
                   <span className="text-cyan-300 border-l border-white/20 pl-1.5 font-bold uppercase">
-                    {activeMotionMeta.shortLabel}
+                    {activeMotionMeta.shortLabel} @ {motionIntensity.toFixed(1)}x
                   </span>
                   <span className="text-purple-300 border-l border-white/20 pl-1.5 font-bold uppercase">
                     {activeTransitionMeta.shortLabel}
@@ -996,6 +1138,72 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
                       </div>
                     </div>
 
+                    <div>
+                      <label className="text-[11px] font-medium text-slate-400 block mb-1">
+                        Visual Style Filter Preset (Transcript Emotion Mapped or Custom)
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setEditFilterPreset('default')}
+                          className={`px-2 py-1.5 rounded-lg text-[11px] font-mono border transition-colors cursor-pointer ${
+                            editFilterPreset === 'default'
+                              ? 'bg-amber-400/20 text-amber-300 border-amber-400 font-bold'
+                              : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
+                          }`}
+                        >
+                          Auto (Sentiment)
+                        </button>
+                        {VISUAL_FILTER_PRESETS.map(fPreset => (
+                          <button
+                            key={fPreset.id}
+                            type="button"
+                            onClick={() => setEditFilterPreset(fPreset.id)}
+                            className={`px-2 py-1.5 rounded-lg text-[11px] font-mono border transition-colors cursor-pointer ${
+                              editFilterPreset === fPreset.id
+                                ? `${fPreset.badgeBg} font-bold ring-1 ring-amber-400/40`
+                                : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
+                            }`}
+                          >
+                            {fPreset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">
+                      <div>
+                        <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 mb-1">
+                          <span>Motion Intensity (Pan/Orbit):</span>
+                          <span className="text-cyan-300 font-bold">{editMotionIntensity.toFixed(1)}x</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0.5"
+                          max="2.5"
+                          step="0.1"
+                          value={editMotionIntensity}
+                          onChange={e => setEditMotionIntensity(parseFloat(e.target.value))}
+                          className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 mb-1">
+                          <span>Motion Cycle Duration:</span>
+                          <span className="text-amber-400 font-bold">{editMotionDurationSec.toFixed(1)}s</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="2.0"
+                          max="15.0"
+                          step="0.5"
+                          value={editMotionDurationSec}
+                          onChange={e => setEditMotionDurationSec(parseFloat(e.target.value))}
+                          className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-400"
+                        />
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="text-[11px] font-medium text-slate-400 block mb-1">Camera Spec</label>
@@ -1047,6 +1255,18 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                       </div>
+
+                      {scene.emotionalTone && (
+                        <div className="bg-amber-500/10 border border-amber-500/25 rounded-lg px-2.5 py-1.5 flex items-center justify-between text-[11px] font-mono">
+                          <span className="text-amber-300 font-semibold flex items-center gap-1.5 truncate">
+                            <span>🎭 DRAMATIC TONE:</span>
+                            <span className="text-slate-200 truncate">{scene.emotionalTone}</span>
+                          </span>
+                          <span className="text-[10px] text-amber-400 font-bold uppercase shrink-0">
+                            [{selectedLanguage.toUpperCase()}]
+                          </span>
+                        </div>
+                      )}
 
                       {/* Human Review & Single-Scene Regenerate Action Bar */}
                       <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2">
@@ -1123,6 +1343,195 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
                               </button>
                             );
                           })}
+                        </div>
+                      </div>
+
+                      {/* Cinematic Motion Pacing & Intensity Sliders */}
+                      <div className="bg-slate-950/90 border border-cyan-500/25 rounded-xl p-3 space-y-3">
+                        <div className="flex items-center justify-between text-[11px] font-mono">
+                          <span className="text-cyan-300 font-bold flex items-center gap-1.5">
+                            <Sliders className="w-3.5 h-3.5" />
+                            <span>CINEMATIC MOTION CONTROLS:</span>
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            Speed: <span className="text-cyan-300 font-bold">{motionIntensity.toFixed(1)}x</span> · Cycle: <span className="text-amber-300 font-bold">{motionDurationSec.toFixed(1)}s</span>
+                          </span>
+                        </div>
+
+                        {/* Intensity Slider (Pan Speed / Orbit Radius) */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-[10px] font-mono">
+                            <label className="text-slate-300 flex items-center gap-1">
+                              <span>Pan Speed &amp; Orbit Radius Intensity:</span>
+                              <span className="text-cyan-400 font-bold">{motionIntensity.toFixed(1)}x</span>
+                            </label>
+                            <span className="text-slate-400 text-[9px]">
+                              {motionIntensity <= 0.8
+                                ? 'Subtle & Gentle Drift'
+                                : motionIntensity <= 1.2
+                                ? 'Cinematic Standard'
+                                : motionIntensity <= 1.8
+                                ? 'Dynamic Anamorphic Sweep'
+                                : 'High-Velocity Cinematic'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-mono text-slate-500 shrink-0">0.5x</span>
+                            <input
+                              type="range"
+                              min="0.5"
+                              max="2.5"
+                              step="0.1"
+                              disabled={humanReviewLocked}
+                              value={motionIntensity}
+                              onChange={e => handleChangeMotionIntensity(scene, parseFloat(e.target.value))}
+                              aria-label={`Scene ${scene.sceneNumber} Motion Intensity (Pan Speed / Orbit Radius)`}
+                              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400 disabled:opacity-40"
+                            />
+                            <span className="text-[9px] font-mono text-slate-500 shrink-0">2.5x</span>
+                          </div>
+                        </div>
+
+                        {/* Motion Cycle Duration Slider */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-[10px] font-mono">
+                            <label className="text-slate-300 flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-amber-400/80 inline" />
+                              <span>Motion Preset Duration:</span>
+                              <span className="text-amber-400 font-bold">{motionDurationSec.toFixed(1)}s</span>
+                            </label>
+                            <span className="text-slate-400 text-[9px]">
+                              Effective Cycle: {effectiveMotionAnimDuration.toFixed(1)}s
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-mono text-slate-500 shrink-0">2.0s</span>
+                            <input
+                              type="range"
+                              min="2.0"
+                              max="15.0"
+                              step="0.5"
+                              disabled={humanReviewLocked}
+                              value={motionDurationSec}
+                              onChange={e => handleChangeMotionDuration(scene, parseFloat(e.target.value))}
+                              aria-label={`Scene ${scene.sceneNumber} Motion Duration`}
+                              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-400 disabled:opacity-40"
+                            />
+                            <span className="text-[9px] font-mono text-slate-500 shrink-0">15.0s</span>
+                          </div>
+                        </div>
+
+                        {/* Quick Pacing Presets */}
+                        <div className="flex items-center justify-between gap-1 pt-1 border-t border-slate-900 text-[10px] font-mono">
+                          <span className="text-slate-500 text-[9px]">Pacing Presets:</span>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {[
+                              { label: 'Subtle', intensity: 0.7, dur: 10.0 },
+                              { label: 'Standard', intensity: 1.0, dur: defaultSceneDuration },
+                              { label: 'Cinematic', intensity: 1.4, dur: 7.5 },
+                              { label: 'High-Impact', intensity: 2.0, dur: 5.0 }
+                            ].map(p => (
+                              <button
+                                key={p.label}
+                                type="button"
+                                disabled={humanReviewLocked}
+                                onClick={() => {
+                                  if (humanReviewLocked) return;
+                                  const updated: Scene = {
+                                    ...scene,
+                                    motionIntensity: p.intensity,
+                                    motionDurationSec: p.dur,
+                                    userEdited: true
+                                  };
+                                  onUpdateScene(updated);
+                                  if (previewScene?.id === scene.id) setPreviewScene(updated);
+                                }}
+                                className={`px-1.5 py-0.5 rounded text-[9px] border transition-colors cursor-pointer ${
+                                  Math.abs(motionIntensity - p.intensity) < 0.05
+                                    ? 'bg-cyan-500/25 text-cyan-200 border-cyan-400 font-bold'
+                                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                                }`}
+                              >
+                                {p.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Emotion Tag & Visual Style Filter Presets */}
+                      <div className="bg-slate-950/90 border border-amber-500/25 rounded-xl p-3 space-y-2.5">
+                        <div className="flex items-center justify-between text-[11px] font-mono flex-wrap gap-1">
+                          <span className="text-amber-300 font-bold flex items-center gap-1.5">
+                            <Palette className="w-3.5 h-3.5" />
+                            <span>EMOTION TAG &amp; VISUAL FILTER:</span>
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-amber-400 font-bold px-2 py-0.5 rounded bg-amber-400/10 border border-amber-400/20 uppercase flex items-center gap-1">
+                              <span>🎭</span>
+                              <span>{scene.emotion || 'Intense Drama'}</span>
+                            </span>
+                            {isCustomFilterOverride && (
+                              <button
+                                type="button"
+                                disabled={humanReviewLocked}
+                                onClick={() => handleResetSceneFilterToEmotionAuto(scene)}
+                                className="text-[9px] text-cyan-300 hover:text-cyan-200 underline cursor-pointer"
+                                title="Reset to transcript sentiment auto-mapped preset"
+                              >
+                                Reset to Auto
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Transcript Sentiment Mapping Explanation Banner */}
+                        <div className="text-[10px] font-mono bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800 flex items-center justify-between gap-2">
+                          <div className="text-slate-300 truncate">
+                            <span className="text-slate-500">Transcript Sentiment:</span>{' '}
+                            <span className="text-amber-300 font-semibold">{scene.emotion || 'Documentary Narrative'}</span>
+                            {scene.emotionalTone && (
+                              <span className="text-slate-400"> ({scene.emotionalTone})</span>
+                            )}
+                          </div>
+                          <span className="text-slate-400 shrink-0 text-[9px]">
+                            ➔ Auto: <span className="text-amber-400 font-bold">{autoMappedFilterMeta.label}</span>
+                          </span>
+                        </div>
+
+                        {/* Visual Filter Preset Toggles per scene */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                          {VISUAL_FILTER_PRESETS.map(filterPreset => {
+                            const isSelected = activeVisualFilterId === filterPreset.id;
+                            return (
+                              <button
+                                key={filterPreset.id}
+                                type="button"
+                                disabled={humanReviewLocked}
+                                onClick={() => handleSelectSceneFilterPreset(scene, filterPreset.id)}
+                                className={`px-2 py-1.5 rounded-lg text-[10px] font-mono text-left border transition-all cursor-pointer disabled:opacity-50 flex flex-col justify-between ${
+                                  isSelected
+                                    ? `${filterPreset.badgeBg} font-bold shadow-xs ring-1 ring-amber-400/40`
+                                    : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+                                }`}
+                                title={filterPreset.description}
+                              >
+                                <div className="flex items-center justify-between gap-1 w-full">
+                                  <span className="truncate">{filterPreset.label}</span>
+                                  {isSelected && <span className="text-amber-400 text-xs">✓</span>}
+                                </div>
+                                <span className="text-[8px] opacity-75 truncate block mt-0.5">
+                                  {filterPreset.tag}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Active Filter Description Note */}
+                        <div className="text-[10px] text-slate-400 font-mono italic px-1">
+                          <span className="text-amber-400/80 not-italic font-semibold">{activeFilterMeta.label}:</span>{' '}
+                          {activeFilterMeta.description}
                         </div>
                       </div>
 
@@ -1289,20 +1698,46 @@ export const StoryboardView: React.FC<StoryboardViewProps> = ({
               </div>
             </div>
 
-            <div className="relative aspect-video w-full bg-slate-950 overflow-hidden">
-              <img
-                src={previewScene.imageUrl}
-                alt={previewScene.summary}
-                className={`w-full h-full object-cover ${getMotionPresetCssClass(
-                  previewScene.motionPreset,
-                  previewScene.sceneNumber - 1
-                )} ${getSceneTransitionCssClass(
-                  previewScene.transitionPreset,
-                  previewScene.sceneNumber - 1
-                )}`}
-              />
-              <div className="absolute inset-y-0 w-1/3 pointer-events-none bg-gradient-to-r from-transparent via-amber-300/20 to-transparent anamorphic-flare-pass" />
-            </div>
+            {(() => {
+              const prevFilterId =
+                previewScene.visualFilterPreset && previewScene.visualFilterPreset !== 'default'
+                  ? previewScene.visualFilterPreset
+                  : mapEmotionToVisualFilter(previewScene.emotion, previewScene.emotionalTone);
+              const prevFilterMeta =
+                VISUAL_FILTER_PRESETS.find(f => f.id === prevFilterId) || VISUAL_FILTER_PRESETS[0];
+              const prevIntensity = previewScene.motionIntensity ?? 1.0;
+              const prevDuration =
+                previewScene.motionDurationSec ??
+                previewScene.duration ??
+                Math.max(2, Math.round(previewScene.endTime - previewScene.startTime)) ??
+                8;
+              const prevEffectiveDuration = Math.max(1.5, Math.min(25, prevDuration / prevIntensity));
+
+              return (
+                <div className="relative aspect-video w-full bg-slate-950 overflow-hidden">
+                  <img
+                    src={previewScene.imageUrl}
+                    alt={previewScene.summary}
+                    style={
+                      {
+                        filter: prevFilterMeta.cssFilter,
+                        objectPosition: 'center center',
+                        '--scene-motion-duration': `${prevEffectiveDuration}s`,
+                        '--scene-motion-intensity': `${prevIntensity}`
+                      } as React.CSSProperties
+                    }
+                    className={`w-full h-full object-cover ${getMotionPresetCssClass(
+                      previewScene.motionPreset,
+                      previewScene.sceneNumber - 1
+                    )} ${getSceneTransitionCssClass(
+                      previewScene.transitionPreset,
+                      previewScene.sceneNumber - 1
+                    )}`}
+                  />
+                  <div className="absolute inset-y-0 w-1/3 pointer-events-none bg-gradient-to-r from-transparent via-amber-300/20 to-transparent anamorphic-flare-pass" />
+                </div>
+              );
+            })()}
 
             <div className="p-4 bg-slate-950/60 border-t border-slate-800 space-y-2 text-xs">
               <div className="text-amber-200 font-mono">

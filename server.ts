@@ -14,7 +14,7 @@ import {
   regenerateSingleSceneFromTranscript,
   computeProjectQualityAudit
 } from './src/utils/transcriptPipeline';
-import { generateSceneArtwork } from './src/utils/sceneArt';
+import { generateSceneArtwork, deriveEmotionFromTranscript } from './src/utils/sceneArt';
 import {
   INITIAL_RAW_TRANSCRIPT,
   NATIONALIST_HUB_SPEECH_MAP,
@@ -806,7 +806,8 @@ app.post('/api/projects/:id/retry-stage', async (req, res) => {
         proj.name,
         {
           isDemoMode: Boolean(proj.isDemoMode),
-          sourceLanguage: (proj.sourceLanguage as LanguageCode) || 'en'
+          sourceLanguage: (proj.sourceLanguage as LanguageCode) || 'en',
+          baseScenes: proj.scenes
         }
       );
     } else if (stageName === 'STORYBOARD' || stageName === 'VISUAL_GEN') {
@@ -1107,13 +1108,14 @@ app.post('/api/youtube/process', async (req, res) => {
     };
 
     const videoTitle = customName || details.title;
-    const parsedDur =
+    const rawDur =
       typeof durationSeconds === 'number' && durationSeconds > 1
         ? durationSeconds
         : details.durationSeconds && details.durationSeconds > 1
         ? details.durationSeconds
         : 133;
-    let duration = parsedDur;
+    // Guard against 24/7 continuous live streams or massive timestamps
+    let duration = rawDur > 1800 ? 120 : Math.max(15, rawDur);
 
     // Ensure all 12 languages are generated for translations and full video output
     const activeLanguages: LanguageCode[] = Array.from(
@@ -1309,8 +1311,11 @@ Return ONLY a valid JSON array of 6 objects:
       targetSceneCount,
       mediaDurationSeconds: duration,
       characterRegistry,
-      resolveArtwork: (draft, idx, total) =>
-        generateSceneArtwork(
+      resolveArtwork: (draft, idx, total) => {
+        const emo = deriveEmotionFromTranscript(
+          `${draft.dialogue || ''} ${draft.summary || ''} ${draft.visualDescription || ''}`
+        );
+        return generateSceneArtwork(
           {
             id: draft.id,
             sceneNumber: draft.sceneNumber || idx + 1,
@@ -1324,12 +1329,24 @@ Return ONLY a valid JSON array of 6 objects:
             endTime: draft.endTime,
             characterIds: draft.characterIds,
             depictionMode: draft.depictionMode,
+            emotion: draft.emotion || emo.emotion,
+            emotionalTone: draft.emotionalTone || emo.emotionalTone,
             characterRegistry
           },
           videoTitle,
           idx,
           total
-        )
+        );
+      }
+    });
+
+    scenes = scenes.map((sc, idx) => {
+      const emo = deriveEmotionFromTranscript(`${sc.dialogue} ${sc.summary} ${sc.visualDescription}`);
+      return {
+        ...sc,
+        emotion: sc.emotion || emo.emotion,
+        emotionalTone: sc.emotionalTone || emo.emotionalTone
+      };
     });
 
     // Optional LLM visual direction refinement strictly grounded in each scene's transcript window
@@ -1375,6 +1392,9 @@ ${JSON.stringify(sceneWindowsPayload)}`;
                 (v: any) => Number(v?.sceneNumber) === sc.sceneNumber
               );
               if (!match) return sc;
+              const emo = deriveEmotionFromTranscript(
+                `${sc.dialogue} ${match.summary || sc.summary} ${match.visualDescription || sc.visualDescription}`
+              );
               const updatedScene: Scene = {
                 ...sc,
                 summary:
@@ -1400,7 +1420,9 @@ ${JSON.stringify(sceneWindowsPayload)}`;
                 environment:
                   typeof match.environment === 'string' && match.environment.trim()
                     ? match.environment.trim()
-                    : sc.environment
+                    : sc.environment,
+                emotion: sc.emotion || emo.emotion,
+                emotionalTone: sc.emotionalTone || emo.emotionalTone
               };
               updatedScene.imageUrl = generateSceneArtwork(
                 {
@@ -1464,7 +1486,8 @@ ${JSON.stringify(sceneWindowsPayload)}`;
       videoTitle,
       {
         isDemoMode: false,
-        sourceLanguage: detectedCode
+        sourceLanguage: detectedCode,
+        baseScenes: scenes
       }
     );
 

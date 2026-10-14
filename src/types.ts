@@ -203,6 +203,7 @@ export interface CharacterRegistryEntry {
   identityKnown?: boolean;
   visualAttributes?: CharacterVisualAttributes;
   compiledPrompt?: string;
+  avatarUrl?: string;
 }
 
 export type SceneDepictionMode =
@@ -225,6 +226,15 @@ export interface KokoroProsodyConfig {
 }
 
 export type CinematicMotionPreset = 'pan' | 'dolly' | 'crane' | 'orbit' | 'drift';
+
+export type VisualFilterPreset =
+  | 'cinematic-blue'
+  | 'warm-gold'
+  | 'noir'
+  | 'teal-orange'
+  | 'vintage-cinema'
+  | 'vivid-investigative'
+  | 'default';
 
 export type SceneTransitionPreset =
   | 'cross-fade'
@@ -276,16 +286,24 @@ export interface Scene {
   visibleCharacterNames?: string[];
   visualDirection?: string;
   visibleCharacterNote?: string;
+  emotion?: string;
+  emotionalTone?: string;
+  lensSpec?: string;
+  framingNotes?: string;
   isSilentInterval?: boolean;
   userEdited?: boolean;
   approved?: boolean;
   reviewStatus?: 'pending' | 'approved' | 'rejected';
+  visualFilterPreset?: VisualFilterPreset;
+  motionIntensity?: number;
+  motionDurationSec?: number;
 }
 
 export interface LocalizedOutput {
   languageCode: LanguageCode;
   languageName: string;
   translationSegments: TranscriptSegment[];
+  scenes?: Scene[];
   subtitlesSrt: string;
   subtitlesVtt: string;
   audioWavUrl: string;
